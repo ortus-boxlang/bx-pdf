@@ -1,4 +1,4 @@
-name: @MODULE_NAME@ Snapshots
+name: BoxLang PDF Module Snapshots
 
 on:
   push:

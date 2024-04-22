@@ -1,4 +1,4 @@
-name: @MODULE_NAME@ Test Suites
+name: BoxLang PDF Module Test Suites
 
 # We are a reusable Workflow only
 on:
