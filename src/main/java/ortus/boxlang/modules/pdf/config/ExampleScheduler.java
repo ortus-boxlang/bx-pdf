@@ -1,4 +1,4 @@
-package com.ortussolutions.config;
+package ortus.boxlang.modules.pdf.config;
 
 import java.util.Optional;
 
