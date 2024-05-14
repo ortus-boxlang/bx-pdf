@@ -1,6 +1,7 @@
 {
 	"name": "BoxLang PDF Module",
 	"version": "@build.version@+@build.number@",
+	"unlisted": true,
 	"location": "https://downloads.ortussolutions.com/ortussolutions/boxlang-modules/bx-pdf/@build.version@/bx-pdf-@build.version@.zip",
 	"author": "Ortus Solutions",
 	"homepage": "https://github.com/boxlang-modules/bx-pdf",
@@ -11,9 +12,11 @@
 	},
 	"bugs": "https://github.com/boxlang-modules/bx-pdf/issues",
 	"slug": "bx-pdf",
-	"shortDescription": "Module template for BoxLang modules",
+	"shortDescription": "PDF Module for BoxLang",
 	"type": "boxlang-modules",
-	"keywords": ["boxlang"],
+	"keywords": [
+		"boxlang"
+	],
 	"boxlang": {
 		"minimumVersion": "1.0.0",
 		"moduleName": "pdf"
