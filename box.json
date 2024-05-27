@@ -1,7 +1,6 @@
 {
 	"name": "BoxLang PDF Module",
 	"version": "@build.version@+@build.number@",
-	"unlisted": true,
 	"location": "https://downloads.ortussolutions.com/ortussolutions/boxlang-modules/bx-pdf/@build.version@/bx-pdf-@build.version@.zip",
 	"author": "Ortus Solutions",
 	"homepage": "https://github.com/boxlang-modules/bx-pdf",
