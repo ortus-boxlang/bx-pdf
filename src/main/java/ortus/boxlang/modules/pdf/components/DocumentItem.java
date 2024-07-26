@@ -1,3 +1,4 @@
+
 /**
  * [BoxLang]
  *
@@ -17,55 +18,46 @@
  */
 package ortus.boxlang.modules.pdf.components;
 
-import java.util.Set;
-
+import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.runtime.components.Attribute;
-import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
-import ortus.boxlang.runtime.validation.Validator;
 
-@BoxComponent( allowsBody = false )
-public class ExampleComponent extends Component {
+public class DocumentItem extends Component {
 
-	static Key	locationKey	= Key.of( "location" );
-	static Key	shoutKey	= Key.of( "shout" );
-
-	public ExampleComponent() {
+	/**
+	 * Constructor
+	 */
+	public DocumentItem() {
 		super();
+		// Uncomment and define declare argument to this Component
 		declaredAttributes = new Attribute[] {
-		    new Attribute( Key._NAME, "string", Set.of( Validator.REQUIRED ) ),
-		    new Attribute( locationKey, "string", "world", Set.of( Validator.REQUIRED, Validator.valueOneOf( "world", "universe" ) ) ),
-		    new Attribute( shoutKey, "boolean", false, Set.of( Validator.REQUIRED ) ),
+		    new Attribute( Key.type, "string" ), // "pagebreak|header|footer"
+		    new Attribute( ModuleKeys.evalAtPrint, "string" ) // "true"
 		};
 	}
 
 	/**
-	 * An example component that says hello
+	 * Describe what the invocation of your component does
 	 *
 	 * @param context        The context in which the Component is being invoked
 	 * @param attributes     The attributes to the Component
 	 * @param body           The body of the Component
 	 * @param executionState The execution state of the Component
 	 *
-	 * @attribute.name The name of the person greeting us.
-	 *
-	 * @attribute.location The location of the person.
-	 *
-	 * @attribute.shout Whether the person is shouting or not.
-	 *
+	 * @attribute.foo Describe any expected arguments
 	 */
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
-		String			name		= attributes.getAsString( Key._NAME );
-		String			location	= attributes.getAsString( locationKey );
-		Boolean			shout		= attributes.getAsBoolean( shoutKey );
+		// Replace this example component function body with your own implementation;
+		// Example, passing through to a registered BIF
+		// IStruct response = StructCaster.cast( runtime.getFunctionService().getGlobalFunction( Key.Foo ).invoke( context, attributes, false, Key.Foo ) );
 
-		StringBuilder	sb			= new StringBuilder();
-		String			greeting	= sb.append( "Hello, " ).append( location ).append( " - from " ).append( name ).append( "." ).toString();
-		context.writeToBuffer( shout ? greeting.toUpperCase() : greeting );
+		// Set the result(s) back into the page
+		// ExpressionInterpreter.setVariable( context, attributes.getAsString( Key.variable ), response.getAsString( Key.output ) );
 
 		return DEFAULT_RETURN;
 	}
+
 }
