@@ -49,32 +49,32 @@ public class Document extends Component {
 		    new Attribute( Key._NAME, "string" ), // "output variable name"
 
 		    // PDF Generation options
-		    new Attribute( ModuleKeys.backgroundVisible, "boolean" ), // "yes|no"
+		    new Attribute( ModuleKeys.backgroundVisible, "boolean", true ), // "yes|no"
 		    new Attribute( ModuleKeys.bookmark, "boolean" ), // "yes|no"
-		    new Attribute( ModuleKeys.htmlBookmark, "boolean" ), // If true, it is possible to convert outlines to a list of named anchors (<a
-		                                                         // name="anchor_id">label</a>) or a headings structure (<h1>...<h6>). Transforming of HTML
-		                                                         // hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps within the same
-		                                                         // document are supported as well
+		    new Attribute( ModuleKeys.htmlBookmark, "boolean", false ), // If true, it is possible to convert outlines to a list of named anchors (<a
+		    // name="anchor_id">label</a>) or a headings structure (<h1>...<h6>). Transforming of HTML
+		    // hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps within the same
+		    // document are supported as well
 
 		    // Formatting attributes
 		    new Attribute( ModuleKeys.orientation, "string" ), // "portrait|landscape"
 		    new Attribute( Key.scale, "integer", null ), // "percentage less than 100"
-		    new Attribute( ModuleKeys.marginBottom, "string" ), // "number"
-		    new Attribute( ModuleKeys.marginLeft, "string" ), // "number"
-		    new Attribute( ModuleKeys.marginRight, "string" ), // "number"
-		    new Attribute( ModuleKeys.marginTop, "string" ), // "number"
-		    new Attribute( ModuleKeys.pageWidth, "string" ), // "page width in inches"
+		    new Attribute( ModuleKeys.marginBottom, "double" ), // "number"
+		    new Attribute( ModuleKeys.marginLeft, "double" ), // "number"
+		    new Attribute( ModuleKeys.marginRight, "double" ), // "number"
+		    new Attribute( ModuleKeys.marginTop, "double" ), // "number"
+		    new Attribute( ModuleKeys.pageWidth, "double" ), // "page width in inches"
+		    new Attribute( ModuleKeys.pageHeight, "double" ), // "page height in inches"
 
 		    // Font handling attributes
-		    new Attribute( ModuleKeys.fontEmbed, "boolean" ), // "yes|no"
-		    new Attribute( ModuleKeys.fontDirectory, "boolean" ), // "yes|no"
+		    new Attribute( ModuleKeys.fontEmbed, "boolean", true ), // "yes|no"
+		    new Attribute( ModuleKeys.fontDirectory, "string" ), // "yes|no"
 
 		    // Document security and file system attributes
 		    new Attribute( ModuleKeys.openpassword, "string" ), // "password to open protected documents"
 		    new Attribute( ModuleKeys.ownerPassword, "string" ), // "password"
-		    new Attribute( ModuleKeys.pageHeight, "string" ), // "page height in inches"
 		    new Attribute( ModuleKeys.pageType, "string" ), // "page type"
-		    new Attribute( ModuleKeys.pdfa, "string" ), // "yes|no"
+		    new Attribute( ModuleKeys.pdfa, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
 
 		    // File creation atrributes
 		    new Attribute( ModuleKeys.filename, "string" ), // "filename"

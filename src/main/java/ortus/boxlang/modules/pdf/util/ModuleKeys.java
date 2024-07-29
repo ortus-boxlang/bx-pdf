@@ -28,8 +28,11 @@ public class ModuleKeys {
 	public static final Key	authUser			= Key.of( "authUser" );
 	public static final Key	backgroundVisible	= Key.of( "backgroundVisible" );
 	public static final Key	bookmark			= Key.of( "bookmark" );
+	public static final Key	custom				= Key.of( "custom" );
 	public static final Key	disposition			= Key.of( "disposition" );
+	public static final Key	Document			= Key.of( "Document" );
 	public static final Key	documentItems		= Key.of( "documentItems" );
+	public static final Key	DocumentSection		= Key.of( "DocumentSection" );
 	public static final Key	documentSections	= Key.of( "documentSections" );
 	public static final Key	encryption			= Key.of( "encryption" );
 	public static final Key	filename			= Key.of( "filename" );
@@ -64,4 +67,31 @@ public class ModuleKeys {
 	public static final Key	evalAtPrint			= Key.of( "evalAtPrint" );
 	public static final Key	name				= Key.of( "name" );
 	public static final Key	userAgent			= Key.of( "userAgent" );
+
+	public static final Key	ISOB5				= Key.of( "ISOB5" );
+	public static final Key	ISOB4				= Key.of( "ISOB4" );
+	public static final Key	ISOB3				= Key.of( "ISOB3" );
+	public static final Key	ISOB2				= Key.of( "ISOB2" );
+	public static final Key	ISOB1				= Key.of( "ISOB1" );
+	public static final Key	ISOB0				= Key.of( "ISOB0" );
+	public static final Key	JISB5				= Key.of( "JISB5" );
+	public static final Key	JISB4				= Key.of( "JISB4" );
+	public static final Key	HALFLETTER			= Key.of( "HALFLETTER" );
+	public static final Key	LETTER				= Key.of( "LETTER" );
+	public static final Key	TABLOID				= Key.of( "TABLOID" );
+	public static final Key	LEDGER				= Key.of( "LEDGER" );
+	public static final Key	NOTE				= Key.of( "NOTE" );
+	public static final Key	LEGAL				= Key.of( "LEGAL" );
+
+	public static final Key	A10					= Key.of( "A10" );
+	public static final Key	A9					= Key.of( "A9" );
+	public static final Key	A8					= Key.of( "A8" );
+	public static final Key	A7					= Key.of( "A7" );
+	public static final Key	A6					= Key.of( "A6" );
+	public static final Key	A5					= Key.of( "A5" );
+	public static final Key	A4					= Key.of( "A4" );
+	public static final Key	A3					= Key.of( "A3" );
+	public static final Key	A2					= Key.of( "A2" );
+	public static final Key	A1					= Key.of( "A1" );
+	public static final Key	A0					= Key.of( "A0" );
 }

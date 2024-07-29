@@ -24,8 +24,13 @@ import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
+import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 
 public class DocumentItem extends Component {
+
+	private static final Key	HEADER_TYPE		= Key.of( "header" );
+	private static final Key	FOOTER_TYPE		= Key.of( "footer" );
+	private static final Key	PAGEBREAK_TYPE	= Key.of( "pagebreak" );
 
 	/**
 	 * Constructor
@@ -50,13 +55,29 @@ public class DocumentItem extends Component {
 	 * @attribute.foo Describe any expected arguments
 	 */
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
-		// Replace this example component function body with your own implementation;
-		// Example, passing through to a registered BIF
-		// IStruct response = StructCaster.cast( runtime.getFunctionService().getGlobalFunction( Key.Foo ).invoke( context, attributes, false, Key.Foo ) );
+		if ( attributes.get( Key.type ).equals( "pagebreak" ) ) {
+			context.writeToBuffer( "<div style='page-break-after: always;'></div>", true );
+			return DEFAULT_RETURN;
+		}
 
-		// Set the result(s) back into the page
-		// ExpressionInterpreter.setVariable( context, attributes.getAsString( Key.variable ), response.getAsString( Key.output ) );
+		// First check for a document section
+		IStruct parentState = context.findClosestComponent( ModuleKeys.DocumentSection );
+		if ( parentState == null ) {
+			// Check for a document
+			parentState = context.findClosestComponent( ModuleKeys.Document );
+			if ( parentState == null ) {
+				throw new BoxRuntimeException( "DocumentItem must be nested in the body of an Document component" );
+			}
+		}
 
+		StringBuffer buffer = new StringBuffer();
+
+		processBody( context, body, buffer );
+
+		attributes.put( Key.result, buffer.toString() );
+
+		// Add our item to the document
+		parentState.getAsArray( ModuleKeys.documentItems ).add( attributes );
 		return DEFAULT_RETURN;
 	}
 

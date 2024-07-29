@@ -25,7 +25,10 @@ import ortus.boxlang.runtime.components.Attribute;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.Key;
+import ortus.boxlang.runtime.types.Array;
 import ortus.boxlang.runtime.types.IStruct;
+import ortus.boxlang.runtime.types.Struct;
+import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 import ortus.boxlang.runtime.validation.Validator;
 
 public class DocumentSection extends Component {
@@ -69,12 +72,27 @@ public class DocumentSection extends Component {
 	 * @attribute.foo Describe any expected arguments
 	 */
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
-		// Replace this example component function body with your own implementation;
-		// Example, passing through to a registered BIF
-		// IStruct response = StructCaster.cast( runtime.getFunctionService().getGlobalFunction( Key.Foo ).invoke( context, attributes, false, Key.Foo ) );
 
-		// Set the result(s) back into the page
-		// ExpressionInterpreter.setVariable( context, attributes.getAsString( Key.variable ), response.getAsString( Key.output ) );
+		executionState.put( ModuleKeys.documentItems, new Array() );
+
+		IStruct parentState = context.findClosestComponent( ModuleKeys.Document );
+		if ( parentState == null ) {
+			throw new BoxRuntimeException( "DocumentSection must be nested in the body of an Document component" );
+		}
+		attributes.put( ModuleKeys.documentItems, new Array() );
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append( "<div style='page-break-before: always;'></div>" );
+
+		processBody( context, body, buffer );
+
+		attributes.put( Key.result, buffer.toString() );
+
+		// Add our section to the document
+		parentState.getAsArray( ModuleKeys.documentSections ).add( Struct.of(
+		    Key.attributes, attributes,
+		    Key.executionState, executionState
+		) );
 
 		return DEFAULT_RETURN;
 	}
