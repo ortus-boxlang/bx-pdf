@@ -1,0 +1,6 @@
+{
+	"runtime": {
+		"modulesDirectory": ["${user-dir}/src/main"],
+		"modules": {}
+	}
+}

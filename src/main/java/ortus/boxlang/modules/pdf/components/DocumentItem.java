@@ -20,12 +20,14 @@ package ortus.boxlang.modules.pdf.components;
 
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.runtime.components.Attribute;
+import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 
+@BoxComponent( allowsBody = true, requiresBody = false )
 public class DocumentItem extends Component {
 
 	private static final Key	HEADER_TYPE		= Key.of( "header" );

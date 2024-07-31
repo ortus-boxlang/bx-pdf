@@ -19,7 +19,8 @@
 package ortus.boxlang.modules.pdf.components;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static com.google.common.truth.Truth.assertThat;
+
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,7 +45,7 @@ public class DocumentTest {
 
 	@BeforeAll
 	public static void setUp() {
-		instance = BoxRuntime.getInstance( true );
+		instance = BoxRuntime.getInstance( true, Path.of( "src/test/resources/boxlang.json" ).toString() );
 	}
 
 	@AfterAll
@@ -62,12 +63,18 @@ public class DocumentTest {
 	public void testComponentCF() {
 		instance.executeSource(
 		    """
-		    <cfDocument variable="result" name="foo" arguments="bar" />
-		    """,
+		    <cfdocument format="pdf" variable="result">
+		    	<cfdocumentsection name="Section 1">
+		    		<h1>Section 1</h1>
+		    	</cfdocumentsection>
+		    	<cfdocumentsection name="Section 2">
+		    		<h1>Section 2</h1>
+		    	</cfdocumentsection>
+		    </cfdocument>
+		      """,
 		    context, BoxSourceType.CFTEMPLATE );
 
-		assertTrue( variables.get( result ) instanceof String );
-		assertTrue( variables.getAsString( result ).length() > 0 );
+		assertTrue( variables.get( result ) instanceof byte[] );
 	}
 
 	@DisplayName( "It tests the BIF Document with BoxLang parsing" )
@@ -75,12 +82,18 @@ public class DocumentTest {
 	public void testComponentBX() {
 		instance.executeSource(
 		    """
-		    <bx:Document variable="result" name="foo" arguments="bar" />
-		    """,
+		    <bx:document format="pdf" variable="result">
+		    	<bx:documentsection name="Section 1">
+		    		<h1>Section 1</h1>
+		    	</bx:documentsection>
+		    	<bx:documentsection name="Section 2">
+		    		<h1>Section 2</h1>
+		    	</bx:documentsection>
+		    </bx:document>
+		      """,
 		    context, BoxSourceType.BOXTEMPLATE );
 
-		assertTrue( variables.get( result ) instanceof String );
-		assertTrue( variables.getAsString( result ).length() > 0 );
+		assertTrue( variables.get( result ) instanceof byte[] );
 	}
 
 }

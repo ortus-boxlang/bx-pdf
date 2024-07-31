@@ -22,6 +22,7 @@ import java.util.Set;
 
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.runtime.components.Attribute;
+import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.scopes.Key;
@@ -31,6 +32,7 @@ import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 import ortus.boxlang.runtime.validation.Validator;
 
+@BoxComponent( allowsBody = true, requiresBody = true )
 public class DocumentSection extends Component {
 
 	/**
@@ -46,7 +48,8 @@ public class DocumentSection extends Component {
 		    new Attribute( ModuleKeys.marginTop, "numeric" ), // "number"
 		    new Attribute(
 		        ModuleKeys.mimeType,
-		        "string", "text/html",
+		        "string",
+		        "text/html",
 		        Set.of(
 		            Validator.valueOneOf( "text/html", "text/plain", "application/xml", "image/jpeg", "image/png", "image/bmp", "image/gif" )
 		        ) ), // "text/plain|application/xmlimage/jpeg|image/png|image/bmp|image/gif"

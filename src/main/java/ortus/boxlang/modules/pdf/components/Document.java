@@ -24,6 +24,7 @@ import ortus.boxlang.modules.pdf.types.PDF;
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.modules.pdf.util.PDFUtil;
 import ortus.boxlang.runtime.components.Attribute;
+import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.dynamic.ExpressionInterpreter;
@@ -34,6 +35,7 @@ import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 import ortus.boxlang.runtime.validation.Validator;
 
+@BoxComponent( allowsBody = true, requiresBody = true )
 public class Document extends Component {
 
 	/**
@@ -144,7 +146,7 @@ public class Document extends Component {
 			ExpressionInterpreter.setVariable(
 			    context,
 			    variable,
-			    generated
+			    generated.toBinary()
 			);
 			return DEFAULT_RETURN;
 		} else {

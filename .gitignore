@@ -10,5 +10,6 @@ build/**
 
 ### BOXLANG ###
 /libs/
+/grapher/
 src/test/resources/libs/*
 !src/test/resources/libs/.gitkeep
