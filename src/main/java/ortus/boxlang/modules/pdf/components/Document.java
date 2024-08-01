@@ -48,19 +48,19 @@ public class Document extends Component {
 		    new Attribute( Key.format, "string", "pdf" ), // "PDF|FlashPaper"
 		    new Attribute( ModuleKeys.encryption, "string", "none" ), // "128-bit|40-bit|none"
 		    new Attribute( ModuleKeys.localUrl, "boolean" ), // "yes|no"
-		    new Attribute( Key._NAME, "string" ), // "output variable name"
+		    new Attribute( Key.variable, "string" ), // "output variable name"
 
 		    // PDF Generation options
 		    new Attribute( ModuleKeys.backgroundVisible, "boolean", true ), // "yes|no"
-		    new Attribute( ModuleKeys.bookmark, "boolean" ), // "yes|no"
+		    new Attribute( ModuleKeys.bookmark, "boolean", true ), // "yes|no"
 		    new Attribute( ModuleKeys.htmlBookmark, "boolean", false ), // If true, it is possible to convert outlines to a list of named anchors (<a
 		    // name="anchor_id">label</a>) or a headings structure (<h1>...<h6>). Transforming of HTML
 		    // hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps within the same
 		    // document are supported as well
 
 		    // Formatting attributes
-		    new Attribute( ModuleKeys.orientation, "string" ), // "portrait|landscape"
-		    new Attribute( Key.scale, "integer", null ), // "percentage less than 100"
+		    new Attribute( ModuleKeys.orientation, "string", "portrait", Set.of( Validator.valueOneOf( "portrait", "landscape" ) ) ), // "portrait|landscape"
+		    new Attribute( Key.scale, "integer" ), // "percentage less than 100"
 		    new Attribute( ModuleKeys.marginBottom, "double" ), // "number"
 		    new Attribute( ModuleKeys.marginLeft, "double" ), // "number"
 		    new Attribute( ModuleKeys.marginRight, "double" ), // "number"
@@ -128,7 +128,7 @@ public class Document extends Component {
 		executionState.put( ModuleKeys.documentItems, new Array() );
 		executionState.put( ModuleKeys.documentSections, new Array() );
 
-		String			variable	= attributes.getAsString( Key._NAME );
+		String			variable	= attributes.getAsString( Key.variable );
 		String			fileName	= attributes.getAsString( ModuleKeys.filename );
 
 		StringBuffer	buffer		= new StringBuffer();

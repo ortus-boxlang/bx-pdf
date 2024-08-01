@@ -85,7 +85,6 @@ public class DocumentSection extends Component {
 		attributes.put( ModuleKeys.documentItems, new Array() );
 
 		StringBuffer buffer = new StringBuffer();
-		buffer.append( "<div style='page-break-before: always;'></div>" );
 
 		processBody( context, body, buffer );
 

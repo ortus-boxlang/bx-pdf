@@ -103,10 +103,8 @@ public class PDFUtil {
 			        sectionContent,
 			        sectionHeader != null ? sectionHeader.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
 			        sectionFooter != null ? sectionFooter.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
-			        sectionAttributes.getAsDouble( ModuleKeys.marginTop ),
-			        sectionAttributes.getAsDouble( ModuleKeys.marginBottom ),
-			        sectionAttributes.getAsDouble( ModuleKeys.marginLeft ),
-			        sectionAttributes.getAsDouble( ModuleKeys.marginRight )
+			        sectionAttributes,
+			        sectionState
 			    );
 
 		    } );
