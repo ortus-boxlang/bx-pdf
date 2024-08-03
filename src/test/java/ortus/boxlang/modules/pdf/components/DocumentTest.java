@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,21 +35,31 @@ import ortus.boxlang.runtime.context.ScriptingRequestBoxContext;
 import ortus.boxlang.runtime.scopes.IScope;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.scopes.VariablesScope;
+import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class DocumentTest {
 
 	static BoxRuntime	instance;
 	IBoxContext			context;
 	IScope				variables;
-	static Key			result	= new Key( "result" );
+	static Key			result			= new Key( "result" );
+	static String		testURLImage	= "https://ortus-public.s3.amazonaws.com/logos/ortus-medium.jpg";
+	static String		tmpDirectory	= "src/test/resources/tmp/Document";
 
 	@BeforeAll
 	public static void setUp() {
 		instance = BoxRuntime.getInstance( true, Path.of( "src/test/resources/boxlang.json" ).toString() );
+		System.out.println( "Temp Directory Exists " + FileSystemUtil.exists( tmpDirectory ) );
+		if ( !FileSystemUtil.exists( tmpDirectory ) ) {
+			FileSystemUtil.createDirectory( tmpDirectory, true, null );
+		}
 	}
 
 	@AfterAll
 	public static void teardown() {
+		if ( FileSystemUtil.exists( tmpDirectory ) ) {
+			FileSystemUtil.deleteDirectory( tmpDirectory, true );
+		}
 	}
 
 	@BeforeEach
@@ -59,28 +68,36 @@ public class DocumentTest {
 		variables	= context.getScopeNearby( VariablesScope.name );
 	}
 
-	@DisplayName( "It tests the BIF Document with CFML parsing" )
+	@DisplayName( "It tests the Component Document with CFML parsing" )
 	@Test
 	public void testComponentCF() {
+		variables.put( Key.of( "testImage" ), testURLImage );
+		// @formatter:off
 		instance.executeSource(
 		    """
 		    <cfdocument format="pdf" variable="result">
+				<cfdocumentitem type="header">
+					<h1>Header</h1>
+				</cfdocumentitem>
+				<cfdocumentitem type="footer">
+					<h1>Footer</h1>
+				</cfdocumentitem>
 		    	<cfdocumentsection name="Section 1">
 		    		<h1>Section 1</h1>
 		    	</cfdocumentsection>
 		    	<cfdocumentsection name="Section 2">
 		    		<h1>Section 2</h1>
 		    	</cfdocumentsection>
+				<cfdocumentsection src="#testImage#">
 		    </cfdocument>
 		      """,
 		    context, BoxSourceType.CFTEMPLATE );
-
+		// @formatter:on
 		assertTrue( variables.get( result ) instanceof byte[] );
 	}
 
-	@DisplayName( "It tests the BIF Document with BoxLang parsing" )
+	@DisplayName( "It tests the Component Document with BoxLang parsing" )
 	@Test
-	@Disabled
 	public void testComponentBX() {
 		instance.executeSource(
 		    """
@@ -95,6 +112,26 @@ public class DocumentTest {
 		      """,
 		    context, BoxSourceType.BOXTEMPLATE );
 
+		assertTrue( variables.get( result ) instanceof byte[] );
+	}
+
+	@DisplayName( "It tests the Component Document with BoxLang script parsing" )
+	@Test
+	public void testComponentScript() {
+		// @formatter:off
+		instance.executeSource(
+		    """
+		    document format="pdf" variable="result"{
+		    	documentsection name="Section 1"{
+		    		writeOutput("<h1>Section 1</h1>")
+				}
+		    	documentsection name="Section 2"{
+		    		writeOutput("<h1>Section 2</h1>")
+				}
+			}
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
 		assertTrue( variables.get( result ) instanceof byte[] );
 	}
 

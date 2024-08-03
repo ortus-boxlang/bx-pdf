@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jsoup.helper.W3CDom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -37,6 +39,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xhtmlrenderer.pdf.PDFEncryption;
+
+import com.lowagie.text.pdf.PdfWriter;
 
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.modules.pdf.util.PDFUtil;
@@ -47,6 +51,7 @@ import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxIOException;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
+import ortus.boxlang.runtime.types.util.ListUtil;
 import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class PDF {
@@ -91,6 +96,10 @@ public class PDF {
 		div.pdf-section{
 			page-break-after: always;
 		}
+		div.image-block {
+			margin-top: auto;
+			margin-bottom: auto;
+		}
 		@page {
 			@top-center { content: element(header) }
 			}
@@ -117,9 +126,22 @@ public class PDF {
 		parseDefaults( attributes, executionState );
 		parseEncryption( attributes );
 		if ( attributes.containsKey( ModuleKeys.fontDirectory ) ) {
-			addFontDirectory( attributes.getAsString( ModuleKeys.fontDirectory ) );
+			ListUtil.asList( attributes.getAsString( ModuleKeys.fontDirectory ), ListUtil.DEFAULT_DELIMITER )
+			    .stream()
+			    .map( StringCaster::cast )
+			    .forEach( this::addFontDirectory );
 		}
 	};
+
+	public PDF addDocumentItem( byte[] item ) {
+		return addDocumentItem(
+		    item,
+		    globalHeader,
+		    globalFooter,
+		    componentAttributes,
+		    Struct.of()
+		);
+	}
 
 	public PDF addDocumentItem( String item ) {
 		return addDocumentItem(
@@ -146,6 +168,37 @@ public class PDF {
 	 */
 	public PDF addDocumentItem(
 	    String item,
+	    String header,
+	    String footer,
+	    IStruct attributes,
+	    IStruct state ) {
+		documentParts.add(
+		    Struct.of(
+		        Key.content, item,
+		        Key.header, header,
+		        ModuleKeys.footer, footer,
+		        Key.attributes, attributes,
+		        Key.executionState, state
+		    )
+		);
+		return this;
+	}
+
+	/**
+	 * Adds a binary item to the PDF document
+	 *
+	 * @param item
+	 * @param header
+	 * @param footer
+	 * @param marginTop
+	 * @param marginBottom
+	 * @param marginLeft
+	 * @param marginRight
+	 *
+	 * @return
+	 */
+	public PDF addDocumentItem(
+	    byte[] item,
 	    String header,
 	    String footer,
 	    IStruct attributes,
@@ -211,66 +264,79 @@ public class PDF {
 		    .mapToObj( idx -> {
 				IStruct part = documentParts.get( idx );
 				String partContent = "";
+				if( idx > 0 ){
+					partContent += "<div style='page-break-before: always;'></div>\n";
+				}
+				String partIdentifier = UUID.randomUUID().toString();
+				partContent += "<div class='pdf-section' id='" + partIdentifier + "'>\n";
+
+				IStruct partAttributes = part.getAsStruct( Key.attributes );
+
 				try {
-					String item			= part.getAsString( Key.content );
-					String header		= part.getAsString( Key.header );
-					String footer		= part.getAsString( ModuleKeys.footer );
-					IStruct partAttributes = part.getAsStruct( Key.attributes );
-					String partName     = partAttributes.getAsString( Key._NAME );
+					Object contentValue = part.get( Key.content );
+					if( contentValue instanceof byte[] ){
+						// binary content handling
+						byte[] bytes		= ( byte[] ) part.get( Key.content );
+						String mimeType		= partAttributes.getAsString( ModuleKeys.mimeType );
 
-					String partIdentifier = UUID.randomUUID().toString();
+						partContent += "<div class='body-image' align='center'><img src='data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString( bytes ).trim() + "'/></div>\n";
 
-					if( bookmarkSections && partName != null ) {
-						bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
+					} else {
+						String item			= StringCaster.cast( contentValue );
+						String header		= part.getAsString( Key.header );
+						String footer		= part.getAsString( ModuleKeys.footer );
+						String partName     = partAttributes.getAsString( Key._NAME );
+
+
+						if( bookmarkSections && partName != null ) {
+							bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
+						}
+
+
+						partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
+
+						if ( header != null ) {
+							partContent += "<div class='pdf-header'>" + header + "</div>\n";
+						}
+
+						if ( footer != null ) {
+							partContent += "<div class='pdf-footer'>" + footer + "</div>\n";
+						}
+
+						partContent += "<div class='content'>" + item + "</div>\n";
+
+						// Parse our content in to a document so we can extract bookmarks
+						Document parsedFragment = PDFUtil.parseContent( partContent );
+						if ( bookmarkAnchors ) {
+							NodeList anchors = parsedFragment.getElementsByTagName( "a" );
+
+							for ( int i = 0; i < anchors.getLength(); i++ ) {
+
+								Node anchor = anchors.item( i );
+								String id = null;
+								String title = null;
+								// Parse the deprecated name attribute then fallback to id/content
+								Node nameNode	= anchor.getAttributes().getNamedItem( "name" );
+								if ( nameNode == null ) {
+									nameNode = anchor.getAttributes().getNamedItem( "id" );
+									id = nameNode.getNodeValue();
+									title = anchor.getNodeValue();
+								} else {
+									id = nameNode.getNodeValue();
+									title = anchor.getNodeValue().length() > 1 ? anchor.getTextContent() : id;
+								}
+								if ( nameNode != null ) {
+									bookmarks.add( "<bookmark name='" + title + "' href='#" + id + "'/>" );
+								}
+							}
+						}
+
 					}
 
-					if( idx > 0 ){
-						partContent += "<div style='page-break-before: always;'></div>\n";
-					}
-
-					partContent += "<div class='pdf-section' id='" + partIdentifier + "'>\n";
-
-					partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
-
-					if ( header != null ) {
-						partContent += "<div class='pdf-header'>" + header + "</div>\n";
-					}
-
-					if ( footer != null ) {
-						partContent += "<div class='pdf-footer'>" + footer + "</div>\n";
-					}
-
-					partContent += "<div class='content'>" + item + "</div>\n";
 
 					partContent += "</div>\n";
 
-					// Parse our content in to a document so we can extract bookmarks
-					Document parsedFragment = PDFUtil.parseContent( partContent );
-					if ( bookmarkAnchors ) {
-						NodeList anchors = parsedFragment.getElementsByTagName( "a" );
-
-						for ( int i = 0; i < anchors.getLength(); i++ ) {
-
-							Node anchor = anchors.item( i );
-							String id = null;
-							String title = null;
-							// Parse the deprecated name attribute then fallback to id/content
-							Node nameNode	= anchor.getAttributes().getNamedItem( "name" );
-							if ( nameNode == null ) {
-								nameNode = anchor.getAttributes().getNamedItem( "id" );
-								id = nameNode.getNodeValue();
-								title = anchor.getNodeValue();
-							} else {
-								id = nameNode.getNodeValue();
-								title = anchor.getNodeValue().length() > 1 ? anchor.getTextContent() : id;
-							}
-							if ( nameNode != null ) {
-								bookmarks.add( "<bookmark name='" + title + "' href='#" + id + "'/>" );
-							}
-						}
-					}
-
-				} catch ( BoxRuntimeException e ) {
+				}catch ( BoxRuntimeException e ) {
 					logger.atError().log(
 						String.format(
 							"Error generating PDF for document part [%s].  The messageReceived was: %s",
@@ -297,6 +363,9 @@ public class PDF {
 		Document parsedContent = PDFUtil.parseContent( content );
 
 		renderer.setDocument( parsedContent );
+
+		// Useful for debugging the HTML of the PDF before generation
+		System.out.println( W3CDom.asString( renderer.getDocument(), null ) );
 
 		return this;
 	}
@@ -343,6 +412,10 @@ public class PDF {
 		bookmarkSections	= attributes.getAsBoolean( ModuleKeys.bookmark );
 		bookmarkAnchors		= attributes.getAsBoolean( ModuleKeys.htmlBookmark );
 
+		if ( attributes.getAsBoolean( ModuleKeys.pdfa ) ) {
+			renderer.setPDFXConformance( PdfWriter.PDFA1A );
+		}
+
 	}
 
 	/**
@@ -371,6 +444,10 @@ public class PDF {
 			}
 		}
 		pageStyles += "size: " + pageSize + " " + StringCaster.cast( attributes.getOrDefault( ModuleKeys.orientation, orientation ) ).toLowerCase() + ";\n";
+
+		if ( attributes.getAsInteger( Key.scale ) != null ) {
+			pageStyles += "scale( " + attributes.getAsInteger( Key.scale ).doubleValue() / 100d + " );\n";
+		}
 
 		if ( globalMarginTop != -1d ) {
 			pageStyles += "; margin-top: " + globalMarginTop + "mm";
@@ -475,8 +552,11 @@ public class PDF {
 		}
 	}
 
-	public void toFile( String filename ) {
-		try ( OutputStream outputStream = Files.newOutputStream( Path.of( filename ), StandardOpenOption.CREATE ) ) {
+	public void toFile(
+	    String filename,
+	    boolean overwrite ) {
+		try (
+		    OutputStream outputStream = Files.newOutputStream( Path.of( filename ), overwrite ? StandardOpenOption.CREATE : StandardOpenOption.CREATE_NEW ) ) {
 			renderer.createPDF( outputStream );
 		} catch ( IOException e ) {
 			logger.atError().log( "Error creating PDF", e );

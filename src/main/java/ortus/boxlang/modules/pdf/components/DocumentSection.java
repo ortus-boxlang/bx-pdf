@@ -32,7 +32,7 @@ import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
 import ortus.boxlang.runtime.validation.Validator;
 
-@BoxComponent( allowsBody = true, requiresBody = true )
+@BoxComponent( allowsBody = true, requiresBody = false )
 public class DocumentSection extends Component {
 
 	/**
@@ -49,7 +49,6 @@ public class DocumentSection extends Component {
 		    new Attribute(
 		        ModuleKeys.mimeType,
 		        "string",
-		        "text/html",
 		        Set.of(
 		            Validator.valueOneOf( "text/html", "text/plain", "application/xml", "image/jpeg", "image/png", "image/bmp", "image/gif" )
 		        ) ), // "text/plain|application/xmlimage/jpeg|image/png|image/bmp|image/gif"

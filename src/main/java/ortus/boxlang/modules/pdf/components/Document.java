@@ -19,6 +19,7 @@
 package ortus.boxlang.modules.pdf.components;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ortus.boxlang.modules.pdf.types.PDF;
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
@@ -28,11 +29,14 @@ import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.dynamic.ExpressionInterpreter;
+import ortus.boxlang.runtime.dynamic.casters.StringCaster;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.Array;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.types.exceptions.BoxRuntimeException;
+import ortus.boxlang.runtime.types.util.ListUtil;
+import ortus.boxlang.runtime.util.FileSystemUtil;
 import ortus.boxlang.runtime.validation.Validator;
 
 @BoxComponent( allowsBody = true, requiresBody = true )
@@ -76,7 +80,7 @@ public class Document extends Component {
 		    new Attribute( ModuleKeys.openpassword, "string" ), // "password to open protected documents"
 		    new Attribute( ModuleKeys.ownerPassword, "string" ), // "password"
 		    new Attribute( ModuleKeys.pageType, "string" ), // "page type"
-		    new Attribute( ModuleKeys.pdfa, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
+		    new Attribute( ModuleKeys.pdfa, "string", false ), // "yes|no"
 
 		    // File creation atrributes
 		    new Attribute( ModuleKeys.filename, "string" ), // "filename"
@@ -110,6 +114,9 @@ public class Document extends Component {
 		    // Form field attributes - not implemented in standard module
 		    new Attribute( ModuleKeys.formfields, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
 		    new Attribute( ModuleKeys.formsType, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "FDF|PDF|HTML|XML"
+
+		    // Placeholder for alternate variable name
+		    new Attribute( Key._NAME, "string" )
 		};
 	}
 
@@ -128,32 +135,89 @@ public class Document extends Component {
 		executionState.put( ModuleKeys.documentItems, new Array() );
 		executionState.put( ModuleKeys.documentSections, new Array() );
 
-		String			variable	= attributes.getAsString( Key.variable );
-		String			fileName	= attributes.getAsString( ModuleKeys.filename );
+		String variable = attributes.getAsString( Key.variable );
 
-		StringBuffer	buffer		= new StringBuffer();
+		// Lucee and Adobe use different attributes for the variable name
+		if ( variable != null && attributes.containsKey( Key._NAME ) ) {
+			variable = attributes.getAsString( Key._NAME );
+		}
+		String	fileName		= attributes.getAsString( ModuleKeys.filename );
+		String	browserFileName	= attributes.getAsString( ModuleKeys.saveAsName );
+		String	mimeType		= attributes.getAsString( ModuleKeys.mimeType );
 
-		BodyResult		bodyResult	= processBody( context, body, buffer );
-
-		// IF there was a return statement inside our body, we early exit now
-		if ( bodyResult.isEarlyExit() ) {
-			return bodyResult;
+		// Ensure our font directories are absolute
+		if ( attributes.getAsString( ModuleKeys.fontDirectory ) != null ) {
+			attributes.put(
+			    ModuleKeys.fontDirectory,
+			    ListUtil.asList( attributes.getAsString( ModuleKeys.fontDirectory ), ListUtil.DEFAULT_DELIMITER )
+			        .stream()
+			        .map( StringCaster::cast )
+			        .map( path -> path.substring( 0, 4 ).equalsIgnoreCase( "http" ) ? path
+			            : FileSystemUtil.expandPath( context, path ).absolutePath().toString() )
+			        .collect( Collectors.joining( ListUtil.DEFAULT_DELIMITER ) )
+			);
 		}
 
-		PDF generated = PDFUtil.generatePDF( buffer, context, attributes, executionState );
+		StringBuffer	buffer			= new StringBuffer();
+		Object			sourceFile		= null;
+		PDF				pdf				= null;
+		byte[]			binarySource	= null;
+
+		if ( attributes.containsKey( ModuleKeys.src ) ) {
+			attributes.put( ModuleKeys.srcfile, attributes.getAsString( ModuleKeys.src ) );
+		}
+
+		if ( attributes.getAsString( ModuleKeys.srcfile ) != null ) {
+			// srcfile may be a URL, relative or absolute path
+			String srcFile = attributes.getAsString( ModuleKeys.srcfile );
+			if ( !srcFile.substring( 0, 4 ).equalsIgnoreCase( "http" ) ) {
+				srcFile = FileSystemUtil.expandPath( context, srcFile ).absolutePath().toString();
+			}
+			sourceFile = FileSystemUtil.read( srcFile );
+			if ( mimeType == null ) {
+				attributes.put( ModuleKeys.mimeType, FileSystemUtil.getMimeType( srcFile ) );
+			}
+		} else {
+			BodyResult bodyResult = processBody( context, body, buffer );
+
+			// IF there was a return statement inside our body, we early exit now
+			if ( bodyResult.isEarlyExit() ) {
+				return bodyResult;
+			}
+		}
+
+		if ( sourceFile != null ) {
+			if ( sourceFile instanceof String ) {
+				buffer.append( sourceFile );
+			} else {
+				binarySource = ( byte[] ) sourceFile;
+			}
+		}
+
+		if ( binarySource != null ) {
+			pdf = PDFUtil.generatePDF( binarySource, context, attributes, executionState );
+		} else {
+			pdf = PDFUtil.generatePDF( buffer, context, attributes, executionState );
+		}
 
 		if ( variable != null ) {
 			ExpressionInterpreter.setVariable(
 			    context,
 			    variable,
-			    generated.toBinary()
+			    pdf.toBinary()
+			);
+			return DEFAULT_RETURN;
+		} else if ( fileName != null ) {
+			pdf.toFile(
+			    FileSystemUtil.expandPath( context, fileName ).absolutePath().toString(),
+			    attributes.getAsBoolean( Key.overwrite )
 			);
 			return DEFAULT_RETURN;
 		} else {
 			IStruct interceptorArgs = Struct.of(
-			    Key.content, generated.toBinary(),
+			    Key.content, pdf.toBinary(),
 			    Key.mimetype, "application/pdf",
-			    ModuleKeys.filename, fileName,
+			    ModuleKeys.filename, browserFileName != null ? browserFileName : "Document.pdf",
 			    Key.reset, true,
 			    Key.abort, true
 			);

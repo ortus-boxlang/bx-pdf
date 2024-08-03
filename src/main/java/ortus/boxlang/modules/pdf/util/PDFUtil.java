@@ -24,9 +24,11 @@ import org.jsoup.helper.W3CDom;
 
 import ortus.boxlang.modules.pdf.types.PDF;
 import ortus.boxlang.runtime.context.IBoxContext;
+import ortus.boxlang.runtime.dynamic.casters.StringCaster;
 import ortus.boxlang.runtime.dynamic.casters.StructCaster;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
+import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class PDFUtil {
 
@@ -81,6 +83,20 @@ public class PDFUtil {
 																		}
 																	};
 
+	public static PDF generatePDF( byte[] contents, IBoxContext context, IStruct attributes, IStruct executionState ) {
+		PDF pdf = new PDF( attributes, executionState );
+
+		pdf.addDocumentItem(
+		    contents,
+		    null,
+		    null,
+		    attributes,
+		    executionState
+		);
+
+		return pdf;
+	}
+
 	public static PDF generatePDF( StringBuffer buffer, IBoxContext context, IStruct attributes, IStruct executionState ) {
 
 		PDF pdf = new PDF( attributes, executionState );
@@ -95,17 +111,45 @@ public class PDFUtil {
 		    .forEach( section -> {
 			    IStruct sectionState	= section.getAsStruct( Key.executionState );
 			    IStruct sectionAttributes = section.getAsStruct( Key.attributes );
-			    String sectionContent	= sectionAttributes.getAsString( Key.result );
 			    IStruct sectionHeader	= extractHeaderFromState( sectionState );
 			    IStruct sectionFooter	= extractFooterFromState( sectionState );
 
-			    pdf.addDocumentItem(
-			        sectionContent,
-			        sectionHeader != null ? sectionHeader.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
-			        sectionFooter != null ? sectionFooter.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
-			        sectionAttributes,
-			        sectionState
-			    );
+			    Object sourceContent	= sectionAttributes.getAsString( Key.result );
+
+			    if ( sectionAttributes.containsKey( ModuleKeys.src ) ) {
+				    sectionAttributes.put( ModuleKeys.srcfile, sectionAttributes.getAsString( ModuleKeys.src ) );
+			    }
+
+			    if ( sectionAttributes.containsKey( ModuleKeys.srcfile ) ) {
+				    String srcFile = sectionAttributes.getAsString( ModuleKeys.srcfile );
+				    if ( !srcFile.substring( 0, 4 ).equalsIgnoreCase( "http" ) ) {
+					    srcFile = FileSystemUtil.expandPath( context, srcFile ).absolutePath().toString();
+				    }
+				    sourceContent = FileSystemUtil.read( srcFile );
+				    if ( !sectionAttributes.containsKey( ModuleKeys.mimeType ) ) {
+					    sectionAttributes.put( ModuleKeys.mimeType, FileSystemUtil.getMimeType( srcFile ) );
+				    }
+			    }
+
+			    boolean isBinarySource = sourceContent instanceof byte[];
+
+			    if ( isBinarySource ) {
+				    pdf.addDocumentItem(
+				        ( byte[] ) sourceContent,
+				        sectionHeader != null ? sectionHeader.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
+				        sectionFooter != null ? sectionFooter.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
+				        sectionAttributes,
+				        sectionState
+				    );
+			    } else {
+				    pdf.addDocumentItem(
+				        StringCaster.cast( sourceContent ),
+				        sectionHeader != null ? sectionHeader.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
+				        sectionFooter != null ? sectionFooter.getAsStruct( Key.attributes ).getAsString( Key.result ) : null,
+				        sectionAttributes,
+				        sectionState
+				    );
+			    }
 
 		    } );
 
