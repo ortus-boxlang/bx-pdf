@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.jsoup.helper.W3CDom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -72,37 +71,39 @@ public class PDF {
 	public static boolean				bookmarkSections	= true;
 	public static boolean				bookmarkAnchors		= false;
 
-	private static final double			defaultMarginTop	= -1d;
-	private static final double			defaultMarginBottom	= -1d;
-	private static final double			defaultMarginLeft	= -1d;
-	private static final double			defaultMarginRight	= -1d;
+	private static final double			defaultMarginTop	= 1d;
+	private static final double			defaultMarginBottom	= 1d;
+	private static final double			defaultMarginLeft	= 1d;
+	private static final double			defaultMarginRight	= 1d;
 
 	public static String				globalHeader		= "";
 	public static String				globalFooter		= "";
-	public static double				globalMarginTop		= -1d;
-	public static double				globalMarginBottom	= -1d;
-	public static double				globalMarginLeft	= -1d;
-	public static double				globalMarginRight	= -1d;
+	public static String				globalMeasureUnit	= "in";
+	public static double				globalMarginTop		= 1d;
+	public static double				globalMarginBottom	= 1d;
+	public static double				globalMarginLeft	= 1d;
+	public static double				globalMarginRight	= 1d;
 	// @formatter:off
 	private String				baseStyles			= """
 		div.pdf-header {
-			display: block; text-align: center;
+			display: block;
+			padding-bottom: .25in;
 			position: running(header);
 		}
 		div.pdf-footer {
-			display: block; text-align: center;
+			display: block;
+			padding-bottom: .25in;
 			position: running(footer);
-		}
-		div.pdf-section{
-			page-break-after: always;
 		}
 		div.image-block {
 			margin-top: auto;
 			margin-bottom: auto;
+			max-width: 100%;
+			max-height: 100%;
 		}
 		@page {
 			@top-center { content: element(header) }
-			}
+		}
 		@page {
 			@bottom-center { content: element(footer) }
 		}
@@ -255,7 +256,7 @@ public class PDF {
 
 		String content = "<html>\n<head>\n";
 
-		content	+= "<style>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
+		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
 
 		content	+= "</head>\n<body>\n";
 
@@ -283,8 +284,8 @@ public class PDF {
 
 					} else {
 						String item			= StringCaster.cast( contentValue );
-						String header		= part.getAsString( Key.header );
-						String footer		= part.getAsString( ModuleKeys.footer );
+						String header		= part.get( Key.header ) != null ? part.getAsString( Key.header ) : globalHeader;
+						String footer		= part.get( ModuleKeys.footer ) != null ? part.getAsString( ModuleKeys.footer ) : globalFooter;
 						String partName     = partAttributes.getAsString( Key._NAME );
 
 
@@ -292,8 +293,7 @@ public class PDF {
 							bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
 						}
 
-
-						partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
+						// partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
 
 						if ( header != null ) {
 							partContent += "<div class='pdf-header'>" + header + "</div>\n";
@@ -364,8 +364,8 @@ public class PDF {
 
 		renderer.setDocument( parsedContent );
 
-		// Useful for debugging the HTML of the PDF before generation
-		System.out.println( W3CDom.asString( renderer.getDocument(), null ) );
+		// // Useful for debugging the HTML of the PDF before generation
+		// System.out.println( W3CDom.asString( renderer.getDocument(), null ) );
 
 		return this;
 	}
@@ -426,7 +426,8 @@ public class PDF {
 	 */
 	public String getPageStyles( IStruct attributes, Boolean showCounter ) {
 		String pageStyles = baseStyles;
-		pageStyles += "@page{";
+		globalMeasureUnit	= attributes.getAsString( ModuleKeys.unit );
+		pageStyles			+= "@page{";
 		if ( attributes.get( ModuleKeys.pageType ) != null ) {
 			Key typeKey = Key.of( attributes.getAsString( ModuleKeys.pageType ) );
 			if ( typeKey.equals( ModuleKeys.custom ) ) {
@@ -449,18 +450,10 @@ public class PDF {
 			pageStyles += "scale( " + attributes.getAsInteger( Key.scale ).doubleValue() / 100d + " );\n";
 		}
 
-		if ( globalMarginTop != -1d ) {
-			pageStyles += "; margin-top: " + globalMarginTop + "mm";
-		}
-		if ( globalMarginBottom != -1d ) {
-			pageStyles += "; margin-bottom: " + globalMarginBottom + "mm";
-		}
-		if ( globalMarginLeft != -1d ) {
-			pageStyles += "; margin-left: " + globalMarginLeft + "mm";
-		}
-		if ( globalMarginRight != -1d ) {
-			pageStyles += "; margin-right: " + globalMarginRight + "mm";
-		}
+		pageStyles	+= "; margin-top: " + globalMarginTop + globalMeasureUnit;
+		pageStyles	+= "; margin-bottom: " + globalMarginBottom + globalMeasureUnit;
+		pageStyles	+= "; margin-left: " + globalMarginLeft + globalMeasureUnit;
+		pageStyles	+= "; margin-right: " + globalMarginRight + globalMeasureUnit;
 
 		if ( showCounter ) {
 			pageStyles += "@top-right { content: \"Page \" counter(pageNumber);}";
@@ -545,7 +538,8 @@ public class PDF {
 	 */
 	public byte[] toBinary() {
 		try ( ByteArrayOutputStream outputStream = new ByteArrayOutputStream() ) {
-			renderer.createPDF( renderer.getDocument(), outputStream );
+			renderer.layout();
+			renderer.createPDF( outputStream, true );
 			return outputStream.toByteArray();
 		} catch ( IOException e ) {
 			throw new BoxIOException( e );
@@ -557,7 +551,8 @@ public class PDF {
 	    boolean overwrite ) {
 		try (
 		    OutputStream outputStream = Files.newOutputStream( Path.of( filename ), overwrite ? StandardOpenOption.CREATE : StandardOpenOption.CREATE_NEW ) ) {
-			renderer.createPDF( outputStream );
+			renderer.layout();
+			renderer.createPDF( outputStream, true );
 		} catch ( IOException e ) {
 			logger.atError().log( "Error creating PDF", e );
 		}

@@ -84,7 +84,7 @@ public class Document extends Component {
 
 		    // File creation atrributes
 		    new Attribute( ModuleKeys.filename, "string" ), // "filename"
-		    new Attribute( Key.overwrite, "string" ), // "yes|no"
+		    new Attribute( Key.overwrite, "string", false ), // "yes|no"
 		    new Attribute( ModuleKeys.saveAsName, "string" ), // "PDF filename"
 		    new Attribute( ModuleKeys.src, "string" ), // "URL|pathname relative to web root"
 		    new Attribute( ModuleKeys.srcfile, "string" ), // "absolute pathname to a file"
@@ -97,7 +97,7 @@ public class Document extends Component {
 		        )
 		    ), // mimetype of the source (when attribute src or srcfile are defined)
 		    new Attribute( ModuleKeys.tagged, "string" ), // "yes|no"
-		    new Attribute( ModuleKeys.unit, "string" ), // "in|cm"
+		    new Attribute( ModuleKeys.unit, "string", "in" ), // "in|cm"
 		    new Attribute( Key.userAgent, "string" ), // "HTTP user agent identifier"
 
 		    new Attribute( ModuleKeys.proxyHost, "string" ), // "IP address or server name for proxy host"
@@ -208,8 +208,11 @@ public class Document extends Component {
 			);
 			return DEFAULT_RETURN;
 		} else if ( fileName != null ) {
+			System.out.println( "Original file path " + fileName );
+			fileName = FileSystemUtil.expandPath( context, fileName ).absolutePath().toString();
+			System.out.println( "Writing PDF to " + fileName );
 			pdf.toFile(
-			    FileSystemUtil.expandPath( context, fileName ).absolutePath().toString(),
+			    fileName,
 			    attributes.getAsBoolean( Key.overwrite )
 			);
 			return DEFAULT_RETURN;

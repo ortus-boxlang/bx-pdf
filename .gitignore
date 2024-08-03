@@ -12,4 +12,5 @@ build/**
 /libs/
 /grapher/
 src/test/resources/libs/*
+src/test/resources/tmp/*
 !src/test/resources/libs/.gitkeep

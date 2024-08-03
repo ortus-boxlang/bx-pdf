@@ -50,6 +50,9 @@ public class DocumentTest {
 	public static void setUp() {
 		instance = BoxRuntime.getInstance( true, Path.of( "src/test/resources/boxlang.json" ).toString() );
 		System.out.println( "Temp Directory Exists " + FileSystemUtil.exists( tmpDirectory ) );
+		if ( FileSystemUtil.exists( tmpDirectory ) ) {
+			FileSystemUtil.deleteDirectory( tmpDirectory, true );
+		}
 		if ( !FileSystemUtil.exists( tmpDirectory ) ) {
 			FileSystemUtil.createDirectory( tmpDirectory, true, null );
 		}
@@ -58,7 +61,7 @@ public class DocumentTest {
 	@AfterAll
 	public static void teardown() {
 		if ( FileSystemUtil.exists( tmpDirectory ) ) {
-			FileSystemUtil.deleteDirectory( tmpDirectory, true );
+			// FileSystemUtil.deleteDirectory( tmpDirectory, true );
 		}
 	}
 
@@ -133,6 +136,36 @@ public class DocumentTest {
 		    context, BoxSourceType.BOXSCRIPT );
 		// @formatter:on
 		assertTrue( variables.get( result ) instanceof byte[] );
+	}
+
+	@DisplayName( "It tests the ability to write to a file" )
+	@Test
+	public void testFileWrite() {
+		String testFile = tmpDirectory + "/test.pdf";
+		variables.put( Key.of( "testImage" ), testURLImage );
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+		    <bx:document format="pdf" filename="#outputFile#">
+				<bx:documentitem type="header">
+					<h1>Header</h1>
+				</bx:documentitem>
+				<bx:documentitem type="footer">
+					<h1>Footer</h1>
+				</bx:documentitem>
+		    	<bx:documentsection name="Section 1">
+		    		<h1>Section 1</h1>
+		    	</bx:documentsection>
+		    	<bx:documentsection name="Section 2">
+		    		<h1>Section 2</h1>
+		    	</bx:documentsection>
+				<bx:documentsection src="#testImage#">
+		    </bx:document>
+		      """,
+		    context, BoxSourceType.BOXTEMPLATE );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
 	}
 
 }
