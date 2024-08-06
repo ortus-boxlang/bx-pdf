@@ -58,7 +58,7 @@ public class PDF {
 	/**
 	 * The renderer instance used to create the final PDF
 	 */
-	private static ITextRenderer		renderer;
+	private ITextRenderer				renderer;
 
 	/**
 	 * Valid font extensions which can be imported
@@ -88,22 +88,22 @@ public class PDF {
 	/**
 	 * The default settings for the PDF
 	 */
-	public static boolean				embedFonts			= false;
-	public static boolean				bookmarkSections	= true;
-	public static boolean				bookmarkAnchors		= false;
+	public boolean						embedFonts			= false;
+	public boolean						bookmarkSections	= true;
+	public boolean						bookmarkAnchors		= false;
 
 	private static final double			defaultMarginTop	= 1d;
 	private static final double			defaultMarginBottom	= 1d;
 	private static final double			defaultMarginLeft	= 1d;
 	private static final double			defaultMarginRight	= 1d;
 
-	public static String				globalHeader		= "";
-	public static String				globalFooter		= "";
-	public static String				globalMeasureUnit	= "in";
-	public static double				globalMarginTop		= 1d;
-	public static double				globalMarginBottom	= 1d;
-	public static double				globalMarginLeft	= 1d;
-	public static double				globalMarginRight	= 1d;
+	public String						globalHeader		= "";
+	public String						globalFooter		= "";
+	public String						globalMeasureUnit	= "in";
+	public double						globalMarginTop		= 1d;
+	public double						globalMarginBottom	= 1d;
+	public double						globalMarginLeft	= 1d;
+	public double						globalMarginRight	= 1d;
 
 	/**
 	 * Base controlling the PDF headers, footers and content styles

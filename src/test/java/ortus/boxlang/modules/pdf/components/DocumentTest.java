@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -129,7 +128,6 @@ public class DocumentTest {
 
 	@DisplayName( "It tests the Component Document with BoxLang script parsing" )
 	@Test
-	@Disabled( "Disabled until we can figure out the thread safety issue on this one test" )
 	public void testComponentScript() {
 		assertFalse( variables.containsKey( ModuleKeys.bxPDF ) );
 		// @formatter:off
