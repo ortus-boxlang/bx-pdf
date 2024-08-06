@@ -24,7 +24,7 @@ This module contributes the following Components to the language:
 
 * `document` - the wrapping component for creating PDF documents
   * The following attributes are available to the `document` component
-    * `format` - [Deprecated] The format of the document to generate. This attribute is deprecated and will be removed in a future release as only PDF generation is supported
+    * `format` - The format of the document to generate. This attribute is unused and will be removed in a future release as only PDF generation is supported. Any other format requested will throw an error.
     * `encryption` - The encryption level to use for the document. Default is none. Possible values are 128-bit, 40-bit, none
     * `localUrl` - If true, the document will be generated with local URLs. Default is false
     * `variable` - The name of the variable to store the generated PDF binary
