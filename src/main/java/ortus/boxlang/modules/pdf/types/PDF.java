@@ -55,18 +55,39 @@ import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class PDF {
 
-	private ITextRenderer				renderer			= new ITextRenderer();
+	/**
+	 * The renderer instance used to create the final PDF
+	 */
+	private static ITextRenderer		renderer;
 
+	/**
+	 * Valid font extensions which can be imported
+	 */
 	ArrayList<String>					validFontExtensions	= new ArrayList<String>( List.of( "ttf", "otf", "ttc", "woff", "afm", "pfb" ) );
 
+	/**
+	 * The logger instance
+	 */
 	private static final Logger			logger				= LoggerFactory.getLogger( PDF.class );
 
+	/**
+	 * The initial attributes provided to the component
+	 */
 	private IStruct						componentAttributes;
 
+	/**
+	 * An array of document sections
+	 */
 	public ArrayList<IStruct>			documentParts		= new ArrayList<IStruct>();
 
+	/**
+	 * An array containing book marks of the PDF document
+	 */
 	public ArrayList<String>			bookmarks			= new ArrayList<String>();
 
+	/**
+	 * The default settings for the PDF
+	 */
 	public static boolean				embedFonts			= false;
 	public static boolean				bookmarkSections	= true;
 	public static boolean				bookmarkAnchors		= false;
@@ -83,15 +104,21 @@ public class PDF {
 	public static double				globalMarginBottom	= 1d;
 	public static double				globalMarginLeft	= 1d;
 	public static double				globalMarginRight	= 1d;
+
+	/**
+	 * Base controlling the PDF headers, footers and content styles
+	 */
 	// @formatter:off
 	private String				baseStyles			= """
-		div.pdf-header {
+		div.bx-pdf-header {
 			display: block;
 			padding-bottom: .25in;
+			width: inherit;
 			position: running(header);
 		}
-		div.pdf-footer {
+		div.bx-pdf-footer {
 			display: block;
+			width: inherit;
 			padding-bottom: .25in;
 			position: running(footer);
 		}
@@ -100,6 +127,12 @@ public class PDF {
 			margin-bottom: auto;
 			max-width: 100%;
 			max-height: 100%;
+		}
+		span.currentpagenumber:before, span.currentsectionpagenumber:before {
+			content: counter(page);
+		}
+		span.totalpages:before, span.totalsectionpagecount:before {
+			content: counter(pages);
 		}
 		@page {
 			@top-center { content: element(header) }
@@ -110,7 +143,13 @@ public class PDF {
 	""";
 	// @formatter:on
 
+	/**
+	 * Default Page size
+	 */
 	private String						pageSize			= PDFUtil.PAGE_TYPES.get( ModuleKeys.A4 );
+	/**
+	 * Default orientation
+	 */
 	private String						orientation			= "portrait";
 
 	private HashMap<String, Integer>	encryptionTypes		= new HashMap<String, Integer>() {
@@ -122,8 +161,15 @@ public class PDF {
 																}
 															};
 
+	/**
+	 * Constructor
+	 *
+	 * @param attributes
+	 * @param executionState
+	 */
 	public PDF( IStruct attributes, IStruct executionState ) {
-		componentAttributes = attributes;
+		renderer			= new ITextRenderer();
+		componentAttributes	= attributes;
 		parseDefaults( attributes, executionState );
 		parseEncryption( attributes );
 		if ( attributes.containsKey( ModuleKeys.fontDirectory ) ) {
@@ -134,6 +180,13 @@ public class PDF {
 		}
 	};
 
+	/**
+	 * Add a binary item to the document
+	 *
+	 * @param item
+	 *
+	 * @return
+	 */
 	public PDF addDocumentItem( byte[] item ) {
 		return addDocumentItem(
 		    item,
@@ -144,6 +197,13 @@ public class PDF {
 		);
 	}
 
+	/**
+	 * Add a string content item to the document
+	 *
+	 * @param item
+	 *
+	 * @return
+	 */
 	public PDF addDocumentItem( String item ) {
 		return addDocumentItem(
 		    item,
@@ -226,7 +286,7 @@ public class PDF {
 	public PDF addFontDirectory( String directory ) {
 		FileSystemUtil.listDirectory(
 		    directory,
-		    false,
+		    true,
 		    validFontExtensions.stream().map( ext -> "*." + ext ).collect( Collectors.joining( "," ) ),
 		    "namenocase",
 		    "file"
@@ -254,11 +314,7 @@ public class PDF {
 	 */
 	public PDF generate() {
 
-		String content = "<html>\n<head>\n";
-
-		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
-
-		content	+= "</head>\n<body>\n";
+		String	content			= "<html>\n<head>\n";
 
 		// @formatter:off
 		String				bodyContents	= IntStream.range( 0, documentParts.size() )
@@ -269,11 +325,30 @@ public class PDF {
 					partContent += "<div style='page-break-before: always;'></div>\n";
 				}
 				String partIdentifier = UUID.randomUUID().toString();
-				partContent += "<div class='pdf-section' id='" + partIdentifier + "'>\n";
+				partContent += "<div class='bx-pdf-section' id='" + partIdentifier + "'>\n";
 
 				IStruct partAttributes = part.getAsStruct( Key.attributes );
 
 				try {
+
+					String header		= part.get( Key.header ) != null ? part.getAsString( Key.header ) : globalHeader;
+					String footer		= part.get( ModuleKeys.footer ) != null ? part.getAsString( ModuleKeys.footer ) : globalFooter;
+					String partName     = partAttributes.getAsString( Key._NAME );
+
+					if( bookmarkSections && partName != null ) {
+						bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
+					}
+
+					// partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
+
+					if ( header != null ) {
+						partContent += "<div class='bx-pdf-header'>" + header + "</div>\n";
+					}
+
+					if ( footer != null ) {
+						partContent += "<div class='bx-pdf-footer'>" + footer + "</div>\n";
+					}
+
 					Object contentValue = part.get( Key.content );
 					if( contentValue instanceof byte[] ){
 						// binary content handling
@@ -284,30 +359,12 @@ public class PDF {
 
 					} else {
 						String item			= StringCaster.cast( contentValue );
-						String header		= part.get( Key.header ) != null ? part.getAsString( Key.header ) : globalHeader;
-						String footer		= part.get( ModuleKeys.footer ) != null ? part.getAsString( ModuleKeys.footer ) : globalFooter;
-						String partName     = partAttributes.getAsString( Key._NAME );
 
+						partContent += "<div class='bx-pdf-content'>" + item + "</div>\n";
 
-						if( bookmarkSections && partName != null ) {
-							bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
-						}
-
-						// partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
-
-						if ( header != null ) {
-							partContent += "<div class='pdf-header'>" + header + "</div>\n";
-						}
-
-						if ( footer != null ) {
-							partContent += "<div class='pdf-footer'>" + footer + "</div>\n";
-						}
-
-						partContent += "<div class='content'>" + item + "</div>\n";
-
-						// Parse our content in to a document so we can extract bookmarks
-						Document parsedFragment = PDFUtil.parseContent( partContent );
 						if ( bookmarkAnchors ) {
+							// Parse our content in to a document so we can extract bookmarks
+							Document parsedFragment = PDFUtil.parseContent( partContent );
 							NodeList anchors = parsedFragment.getElementsByTagName( "a" );
 
 							for ( int i = 0; i < anchors.getLength(); i++ ) {
@@ -352,6 +409,10 @@ public class PDF {
 		    .collect( Collectors.joining( "\n" ) );
 		// @formatter:on
 
+		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
+
+		content	+= "</head>\n<body>\n";
+
 		if ( !bookmarks.isEmpty() ) {
 			content += "<bookmarks>\n" + bookmarks.stream().collect( Collectors.joining( "\n" ) ) + "\n</bookmarks>\n";
 		}
@@ -362,10 +423,12 @@ public class PDF {
 
 		Document parsedContent = PDFUtil.parseContent( content );
 
-		renderer.setDocument( parsedContent );
+		postProcessContent( parsedContent );
 
 		// // Useful for debugging the HTML of the PDF before generation
-		// System.out.println( W3CDom.asString( renderer.getDocument(), null ) );
+		// System.out.println( W3CDom.asString( parsedContent, null ) );
+
+		renderer.setDocument( parsedContent );
 
 		return this;
 	}
@@ -376,8 +439,12 @@ public class PDF {
 	 * @param attributes
 	 */
 	private void parseEncryption( IStruct attributes ) {
+		int encryptionType = encryptionTypes.get( attributes.getAsString( ModuleKeys.encryption ).toLowerCase() );
+		if ( encryptionType == 0 && attributes.get( ModuleKeys.openpassword ) == null && attributes.get( ModuleKeys.ownerPassword ) != null ) {
+			return;
+		}
 		PDFEncryption pdfEncryption = new PDFEncryption();
-		pdfEncryption.setEncryptionType( encryptionTypes.get( attributes.getAsString( ModuleKeys.encryption ).toLowerCase() ) );
+		pdfEncryption.setEncryptionType( encryptionType );
 		if ( attributes.get( ModuleKeys.openpassword ) != null ) {
 			pdfEncryption.setUserPassword( attributes.getAsString( ModuleKeys.openpassword ).getBytes() );
 		}
@@ -394,6 +461,7 @@ public class PDF {
 	 * @param executionState
 	 */
 	private void parseDefaults( IStruct attributes, IStruct executionState ) {
+
 		IStruct header = PDFUtil.extractHeaderFromState( executionState );
 		if ( header != null ) {
 			globalHeader = header.getAsString( Key.result );
@@ -466,6 +534,32 @@ public class PDF {
 		}
 
 		return pageStyles;
+	}
+
+	/**
+	 * Performs post-processing on the finalized PDF document
+	 *
+	 * @param parsDocument
+	 */
+	void postProcessContent( Document parsedDocument ) {
+		boolean		localURL	= componentAttributes.getAsBoolean( ModuleKeys.localUrl );
+
+		// Process image sources and convert to Base64 Href
+		NodeList	imgTags		= parsedDocument.getElementsByTagName( "img" );
+
+		for ( int i = 0; i < imgTags.getLength(); i++ ) {
+			Node	img	= imgTags.item( i );
+			String	src	= img.getAttributes().getNamedItem( "src" ).getNodeValue();
+			if ( src.startsWith( "data:" ) ) {
+				continue;
+			} else if ( localURL || ( !localURL && src.startsWith( "http" ) ) ) {
+				byte[]	bytes		= ( byte[] ) FileSystemUtil.read( src );
+				String	mimeType	= FileSystemUtil.getMimeType( src );
+				src = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString( bytes ).trim();
+			}
+			img.getAttributes().getNamedItem( "src" ).setNodeValue( src );
+		}
+
 	}
 
 	/**

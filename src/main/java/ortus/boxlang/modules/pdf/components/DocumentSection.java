@@ -21,6 +21,7 @@ package ortus.boxlang.modules.pdf.components;
 import java.util.Set;
 
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
+import ortus.boxlang.modules.pdf.util.PDFUtil;
 import ortus.boxlang.runtime.components.Attribute;
 import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
@@ -74,6 +75,8 @@ public class DocumentSection extends Component {
 	 * @attribute.foo Describe any expected arguments
 	 */
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
+
+		context.getDefaultAssignmentScope().put( PDFUtil.DOCUMENT_LOCAL_VARIABLE, PDFUtil.DOCUMENT_LOCAL_PLACEHOLDERS );
 
 		executionState.put( ModuleKeys.documentItems, new Array() );
 

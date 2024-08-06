@@ -29,6 +29,7 @@ import ortus.boxlang.runtime.components.BoxComponent;
 import ortus.boxlang.runtime.components.Component;
 import ortus.boxlang.runtime.context.IBoxContext;
 import ortus.boxlang.runtime.dynamic.ExpressionInterpreter;
+import ortus.boxlang.runtime.dynamic.casters.BooleanCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.Array;
@@ -51,7 +52,7 @@ public class Document extends Component {
 		declaredAttributes = new Attribute[] {
 		    new Attribute( Key.format, "string", "pdf" ), // "PDF|FlashPaper"
 		    new Attribute( ModuleKeys.encryption, "string", "none" ), // "128-bit|40-bit|none"
-		    new Attribute( ModuleKeys.localUrl, "boolean" ), // "yes|no"
+		    new Attribute( ModuleKeys.localUrl, "boolean", false ), // "yes|no"
 		    new Attribute( Key.variable, "string" ), // "output variable name"
 
 		    // PDF Generation options
@@ -96,20 +97,25 @@ public class Document extends Component {
 		            Validator.valueOneOf( "text/html", "text/plain", "application/xml", "image/jpeg", "image/png", "image/bmp", "image/gif" )
 		        )
 		    ), // mimetype of the source (when attribute src or srcfile are defined)
-		    new Attribute( ModuleKeys.tagged, "string" ), // "yes|no"
 		    new Attribute( ModuleKeys.unit, "string", "in" ), // "in|cm"
-		    new Attribute( Key.userAgent, "string" ), // "HTTP user agent identifier"
-
-		    new Attribute( ModuleKeys.proxyHost, "string" ), // "IP address or server name for proxy host"
-		    new Attribute( Key.proxyPassword, "string" ), // "password for the proxy host"
-		    new Attribute( Key.proxyPort, "string" ), // "port of the proxy host"
-		    new Attribute( Key.proxyUser, "string" ), // "user name for the proxy host"
 
 		    new Attribute( ModuleKeys.permissions, "string" ), // "permission list"
 		    new Attribute( ModuleKeys.permissionspassword, "string" ), // "password to access restricted permissions"
 		    new Attribute( ModuleKeys.userPassword, "string" ), // "password"
 		    new Attribute( ModuleKeys.authPassword, "string" ), // "authentication password"
 		    new Attribute( ModuleKeys.authUser, "string" ), // "authentication user name"
+
+		    /**
+		     * URL resolution attributes which are not yet supported
+		     */
+		    new Attribute( Key.userAgent, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "HTTP user agent identifier"
+		    new Attribute( ModuleKeys.proxyHost, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "IP address or server name for proxy host"
+		    new Attribute( Key.proxyPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password for the proxy host"
+		    new Attribute( Key.proxyPort, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "port of the proxy host"
+		    new Attribute( Key.proxyUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "user name for the proxy host"
+
+		    // Adobe only OpenOffice integration - not supported
+		    new Attribute( ModuleKeys.tagged, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
 
 		    // Form field attributes - not implemented in standard module
 		    new Attribute( ModuleKeys.formfields, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
@@ -131,6 +137,8 @@ public class Document extends Component {
 	 * @attribute.foo Describe any expected arguments
 	 */
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
+
+		context.getDefaultAssignmentScope().put( PDFUtil.DOCUMENT_LOCAL_VARIABLE, PDFUtil.DOCUMENT_LOCAL_PLACEHOLDERS );
 
 		executionState.put( ModuleKeys.documentItems, new Array() );
 		executionState.put( ModuleKeys.documentSections, new Array() );
@@ -179,7 +187,6 @@ public class Document extends Component {
 			}
 		} else {
 			BodyResult bodyResult = processBody( context, body, buffer );
-
 			// IF there was a return statement inside our body, we early exit now
 			if ( bodyResult.isEarlyExit() ) {
 				return bodyResult;
@@ -198,6 +205,19 @@ public class Document extends Component {
 			pdf = PDFUtil.generatePDF( binarySource, context, attributes, executionState );
 		} else {
 			pdf = PDFUtil.generatePDF( buffer, context, attributes, executionState );
+		}
+
+		// Unit test convenience variable which will place pdf object in to the variables scope
+		if ( attributes.containsKey( ModuleKeys.isTestMode ) && BooleanCaster.cast( attributes.get( ModuleKeys.isTestMode ) ) ) {
+
+			// System.out.println( "PDF HTML Content:" );
+			// System.out.println( W3CDom.asString( pdf.getRenderer().getDocument(), null ) );
+
+			ExpressionInterpreter.setVariable(
+			    context,
+			    "bxPDF",
+			    pdf
+			);
 		}
 
 		if ( variable != null ) {

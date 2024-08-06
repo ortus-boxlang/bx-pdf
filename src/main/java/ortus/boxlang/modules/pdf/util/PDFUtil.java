@@ -28,61 +28,91 @@ import ortus.boxlang.runtime.dynamic.casters.StringCaster;
 import ortus.boxlang.runtime.dynamic.casters.StructCaster;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
+import ortus.boxlang.runtime.types.Struct;
 import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class PDFUtil {
 
-	public static final HashMap<Key, String>		PAGE_TYPES		= new HashMap<Key, String>() {
+	/**
+	 * Page size type maps
+	 */
+	public static final HashMap<Key, String>		PAGE_TYPES					= new HashMap<Key, String>() {
 
-																		{
-																			put( ModuleKeys.ISOB5, "B5" );
-																			put( ModuleKeys.ISOB4, "B4" );
-																			put( ModuleKeys.ISOB3, "B3" );
-																			put( ModuleKeys.ISOB2, "B2" );
-																			put( ModuleKeys.ISOB1, "B1" );
-																			put( ModuleKeys.ISOB0, "B0" );
-																			put( ModuleKeys.JISB5, "JIS-B5" );
-																			put( ModuleKeys.JISB4, "JIS-B4" );
-																			put( ModuleKeys.HALFLETTER, "A6" );
-																			put( ModuleKeys.LETTER, "letter" );
-																			put( ModuleKeys.TABLOID, "tabloid" );
-																			put( ModuleKeys.LEDGER, "ledger" );
-																			put( ModuleKeys.LEGAL, "legal" );
+																					{
+																						put( ModuleKeys.ISOB5, "B5" );
+																						put( ModuleKeys.ISOB4, "B4" );
+																						put( ModuleKeys.ISOB3, "B3" );
+																						put( ModuleKeys.ISOB2, "B2" );
+																						put( ModuleKeys.ISOB1, "B1" );
+																						put( ModuleKeys.ISOB0, "B0" );
+																						put( ModuleKeys.JISB5, "JIS-B5" );
+																						put( ModuleKeys.JISB4, "JIS-B4" );
+																						put( ModuleKeys.HALFLETTER, "A6" );
+																						put( ModuleKeys.LETTER, "letter" );
+																						put( ModuleKeys.TABLOID, "tabloid" );
+																						put( ModuleKeys.LEDGER, "ledger" );
+																						put( ModuleKeys.LEGAL, "legal" );
 
-																			put( ModuleKeys.A10, "A10" );
-																			put( ModuleKeys.A9, "A9" );
-																			put( ModuleKeys.A8, "A8" );
-																			put( ModuleKeys.A7, "A7" );
-																			put( ModuleKeys.A6, "A6" );
-																			put( ModuleKeys.A5, "A5" );
-																			put( ModuleKeys.A4, "A4" );
-																			put( ModuleKeys.A3, "A3" );
-																			put( ModuleKeys.A2, "A2" );
-																			put( ModuleKeys.A1, "A1" );
-																			put( ModuleKeys.A0, "A0" );
-																		}
-																	};
+																						put( ModuleKeys.A10, "A10" );
+																						put( ModuleKeys.A9, "A9" );
+																						put( ModuleKeys.A8, "A8" );
+																						put( ModuleKeys.A7, "A7" );
+																						put( ModuleKeys.A6, "A6" );
+																						put( ModuleKeys.A5, "A5" );
+																						put( ModuleKeys.A4, "A4" );
+																						put( ModuleKeys.A3, "A3" );
+																						put( ModuleKeys.A2, "A2" );
+																						put( ModuleKeys.A1, "A1" );
+																						put( ModuleKeys.A0, "A0" );
+																					}
+																				};
+	/**
+	 * Page dimension map, in millimeters ( width, height ) for page sizes which are not supported via CSS
+	 */
+	public static final HashMap<String, double[]>	PAGE_DIMENSIONS				= new HashMap<String, double[]>() {
 
-	public static final HashMap<String, double[]>	PAGE_DIMENSIONS	= new HashMap<String, double[]>() {
+																					{
+																						put( "A0", new double[] { 841, 1189 } );
+																						put( "A1", new double[] { 594, 841 } );
+																						put( "A2", new double[] { 420, 594 } );
+																						put( "A6", new double[] { 105, 148 } );
+																						put( "A7", new double[] { 74, 105 } );
+																						put( "A8", new double[] { 52, 74 } );
+																						put( "A9", new double[] { 37, 52 } );
+																						put( "A10", new double[] { 26, 37 } );
+																						put( "A10", new double[] { 26, 37 } );
+																						put( "B0", new double[] { 1000, 1414 } );
+																						put( "B1", new double[] { 707, 1000 } );
+																						put( "B2", new double[] { 500, 707 } );
+																						put( "B3", new double[] { 353, 500 } );
+																						put( "tabloid", new double[] { 431.8, 279.4 } );
+																					}
+																				};
 
-																		{
-																			put( "A0", new double[] { 841, 1189 } );
-																			put( "A1", new double[] { 594, 841 } );
-																			put( "A2", new double[] { 420, 594 } );
-																			put( "A6", new double[] { 105, 148 } );
-																			put( "A7", new double[] { 74, 105 } );
-																			put( "A8", new double[] { 52, 74 } );
-																			put( "A9", new double[] { 37, 52 } );
-																			put( "A10", new double[] { 26, 37 } );
-																			put( "A10", new double[] { 26, 37 } );
-																			put( "B0", new double[] { 1000, 1414 } );
-																			put( "B1", new double[] { 707, 1000 } );
-																			put( "B2", new double[] { 500, 707 } );
-																			put( "B3", new double[] { 353, 500 } );
-																			put( "tabloid", new double[] { 431.8, 279.4 } );
-																		}
-																	};
+	/**
+	 * Local variable struct used for placeholders
+	 **/
+	public static final String						DOCUMENT_LOCAL_VARIABLE		= "bxdocument";
+	/**
+	 * Local variable struct used for placeholders
+	 */
+	public static final IStruct						DOCUMENT_LOCAL_PLACEHOLDERS	= Struct.of(
+	    ModuleKeys.currentpagenumber, "<span class='currentpagenumber'/>",
+	    ModuleKeys.totalpages, "<span class='totalpages'/>",
+	    ModuleKeys.currentsectionpagenumber, "<span class='currentsectionpagenumber'/>",
+	    ModuleKeys.totalsectionpagecount, "<span class='totalsectionpagecount'/>"
+	);
 
+	/**
+	 * Generate a PDF from a byte array
+	 *
+	 * @param contents
+	 * @param context
+	 * @param attributes
+	 * @param executionState
+	 *
+	 * @return
+	 */
 	public static PDF generatePDF( byte[] contents, IBoxContext context, IStruct attributes, IStruct executionState ) {
 		PDF pdf = new PDF( attributes, executionState );
 
@@ -94,9 +124,19 @@ public class PDFUtil {
 		    executionState
 		);
 
-		return pdf;
+		return pdf.generate();
 	}
 
+	/**
+	 * Generate a PDF from a string buffer
+	 *
+	 * @param buffer
+	 * @param context
+	 * @param attributes
+	 * @param executionState
+	 *
+	 * @return
+	 */
 	public static PDF generatePDF( StringBuffer buffer, IBoxContext context, IStruct attributes, IStruct executionState ) {
 
 		PDF pdf = new PDF( attributes, executionState );
@@ -156,7 +196,14 @@ public class PDFUtil {
 		return pdf.generate();
 	}
 
-	public static org.w3c.dom.Document parseContent( String content ) {
+	/**
+	 * Parses and santizes an html 5 string in to a DOM document
+	 *
+	 * @param content
+	 *
+	 * @return
+	 */
+	public synchronized static org.w3c.dom.Document parseContent( String content ) {
 		org.jsoup.nodes.Document doc = Jsoup.parse( content );
 		// Should reuse W3CDom instance if converting multiple documents.
 		return new W3CDom().fromJsoup( doc );
