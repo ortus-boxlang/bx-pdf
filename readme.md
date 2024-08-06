@@ -52,6 +52,20 @@ This module contributes the following Components to the language:
     * `srcfile` - The absolute path to a source file
     * `mimeType` - The mime type of the source. Default is text/html. Possible values are text/html, text/plain, application/xml, image/jpeg, image/png, image/bmp, image/gif
     * `unit` - The unit of measurement to use. Default is inches. Possible values are in, cm
+  * The following attributes are not currently implemented and will throw an error if used
+    * `permissions` - Granular permissability is not yet supported
+    * `permissionspassword` - Granular permissability is not yet supported
+    * `userPassword` - Granular permissability is not yet supported
+    * `authPassword` - Granular permissability is not yet supported
+    * `authUser` - Granular permissability is not yet supported
+    * `userAgent` -  HTTP user agent identifier
+    * `proxyHost` -  IP address or server name for proxy host
+    * `proxyPassword` -  password for the proxy host
+    * `proxyPort` -  port of the proxy host
+    * `proxyUser` -  user name for the proxy host
+    * `tagged` -  yes|no ACF OpenOffice integration not supported
+    * `formfields` -  yes|no Form field attributes are not implemented in standard module
+    * `formsType` -  FDF|PDF|HTML|XML Form field attributes are not implemented in standard module
 * `documentitem` -  specifies header, footer, and pagebreaks within a document body or `documentsection`
   * The following attributes are available to the `documentitem` component
     * `type` A string which dictates the type of item.  Accepted values are `pagebreak`|`header`|`footer`
@@ -66,9 +80,10 @@ This module contributes the following Components to the language:
     * `name` - The name of the section.  This is used as a bookmark for the section.
     * `srcfile` - The absolute path of the file to include in the section.
     * `src` - The URL or path relative to the web root of the content to include in the section.
-    * `userAgent` - The HTTP user agent identifier to use when fetching the content from a URL. Not currently implemented
-    * `authPassword` - The authentication password to use when fetching the content from a URL. Not currently implemented
-    * `authUser` - The authentication user name to use when fetching the content from a URL. Not currently implemented
+  * The following attributes are not currently implemented and will throw an error if used
+    * `userAgent` - The HTTP user agent identifier to use when fetching the content from a URL.
+    * `authPassword` - The authentication password to use when fetching the content from a URL.
+    * `authUser` - The authentication user name to use when fetching the content from a URL.
 
 ## Examples
 
@@ -77,25 +92,25 @@ Simple example using tag-based syntax to generate a physical file:
 ```html
 <bx:set testImage = "https://ortus-public.s3.amazonaws.com/logos/ortus-medium.jpg"/>
 <bx:document format="pdf" filename="/path/to/mydocument.pdf">
-	<!--- Header for all sections --->
-	<bx:documentitem type="header">
-		<h1>This is my Header</h1>
-	</bx:documentitem>
-	<!--- Footer for all sections --->
-	<bx:documentitem type="footer">
-		<h1>This is My Footer</h1>
-		<bx:output><p>Page #bxdocument.currentpagenumber# of #bxdocument.totalpages#</p></bx:output>
-	</bx:documentitem>
-	<!--- Document section, which will be bookmarked as "Section 1" --->
-	<bx:documentsection name="Section 1">
-		<h1>Section 1</h1>
-	</bx:documentsection>
-	<!--- Document section, which will be bookmarked as "Section 2" --->
-	<bx:documentsection name="Section 2">
-		<h1>Section 2</h1>
-	</bx:documentsection>
-	<!--- Document section, which contains an image --->
-	<bx:documentsection src="#testImage#">
+    <!--- Header for all sections --->
+    <bx:documentitem type="header">
+        <h1>This is my Header</h1>
+    </bx:documentitem>
+    <!--- Footer for all sections --->
+    <bx:documentitem type="footer">
+        <h1>This is My Footer</h1>
+        <bx:output><p>Page #bxdocument.currentpagenumber# of #bxdocument.totalpages#</p></bx:output>
+    </bx:documentitem>
+    <!--- Document section, which will be bookmarked as "Section 1" --->
+    <bx:documentsection name="Section 1">
+        <h1>Section 1</h1>
+    </bx:documentsection>
+    <!--- Document section, which will be bookmarked as "Section 2" --->
+    <bx:documentsection name="Section 2">
+        <h1>Section 2</h1>
+    </bx:documentsection>
+    <!--- Document section, which contains an image --->
+    <bx:documentsection src="#testImage#">
 </bx:document>
 ```
 
@@ -103,14 +118,14 @@ Example using script syntax to create a variable containing the binary contents 
 
 ```javascript
 document format="pdf" variable="myPDF"{
-	documentsection name="Section 1"{
-		writeOutput("<h1>Section 1</h1>");
-		include "/path/to/section1.bxm";
-	}
-	documentsection name="Section 2"{
-		writeOutput("<h1>Section 2</h1>");
-		include "/path/to/section2.bxm";
-	}
+    documentsection name="Section 1"{
+        writeOutput("<h1>Section 1</h1>");
+        include "/path/to/section1.bxm";
+    }
+    documentsection name="Section 2"{
+        writeOutput("<h1>Section 2</h1>");
+        include "/path/to/section2.bxm";
+    }
 }
 
 fileWrite( "/path/to/mydocument.pdf", myPDF );
