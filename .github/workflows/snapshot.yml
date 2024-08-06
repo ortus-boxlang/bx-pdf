@@ -44,10 +44,10 @@ jobs:
       - name: Format Java Source
         run: ./gradlew spotlessApply --stacktrace
 
-      - name: Format BoxLang Source
-        uses: Ortus-Solutions/commandbox-action@v1.0.2
-        with:
-          cmd: run-script format
+      # - name: Format BoxLang Source
+      #   uses: Ortus-Solutions/commandbox-action@v1.0.2
+      #   with:
+      #     cmd: run-script format
 
       - name: Commit Format Changes
         uses: stefanzweifel/git-auto-commit-action@v5
