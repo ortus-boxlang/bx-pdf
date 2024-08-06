@@ -8,119 +8,110 @@
 ```
 
 <blockquote>
-	Copyright Since 2023 by Ortus Solutions, Corp
-	<br>
-	<a href="https://www.boxlang.io">www.boxlang.io</a> |
-	<a href="https://www.ortussolutions.com">www.ortussolutions.com</a>
+  Copyright Since 2023 by Ortus Solutions, Corp
+  <br>
+  <a href="https://www.boxlang.io">www.boxlang.io</a> |
+  <a href="https://www.ortussolutions.com">www.ortussolutions.com</a>
 </blockquote>
 
-<p>&nbsp;</p>
 
-This template can be used to create Ortus based BoxLang Modules.  To use, just click the `Use this Template` button in the github repository: https://github.com/boxlang-modules/module-template and run the setup task from where you cloned it.
+This module provides PDF generation functionality to Boxlang
 
-```bash
-box task run taskFile=src/build/SetupTemplate
+
+## Components 
+
+This module contributes the following Components to the language:
+
+* `document` - the wrapping component for creating PDF documents
+  * The following attributes are available to the `document` component
+    * `format` - [Deprecated] The format of the document to generate. This attribute is deprecated and will be removed in a future release as only PDF generation is supported
+    * `encryption` - The encryption level to use for the document. Default is none. Possible values are 128-bit, 40-bit, none
+    * `localUrl` - If true, the document will be generated with local URLs. Default is false
+    * `variable` - The name of the variable to store the generated PDF binary
+    * `backgroundVisible` - If true, the background will be visible. Default is true
+    * `bookmark` - If true, bookmarks will be generated. Default is true
+    * `htmlBookmark` - If true, it is possible to convert outlines to a list of named anchors (`<a name="anchor_id">label</a>`) or a headings structure ( `<h1>... <h6>` ). Transforming of HTML hyperlinks to PDF hyperlinks (if not explicitly disabled Hyperlink jumps within the same document are supported as well
+    * `orientation` - The orientation of the document. Default is portrait. Possible values are portrait, landscape
+    * `scale` - The percentage to scale the document. Must be less than 100
+    * `marginBottom` - The bottom margin of the document
+    * `marginLeft` - The left margin of the document
+    * `marginRight` - The right margin of the document
+    * `marginTop` - The top margin of the document
+    * `pageWidth` - The width of the page in inches
+    * `pageHeight` - The height of the page in inches
+    * `fontEmbed` - If true, fonts will be embedded in the document. Default is true
+    * `fontDirectory` - The directory where fonts are located
+    * `openpassword` - The password to open protected documents
+    * `ownerPassword` - The password to access restricted permissions
+    * `pageType` - The type of page to generate. Default is A4.
+    * `pdfa` - If true, the document will be generated as a PDF/A document. Default is false
+    * `filename` - The filename to write the PDF to.  If not provided and a `variable` argument is not provided, the PDF will be written to the browser ( Web-context only )
+    * `overwrite` - If true, the file will be overwritten if it exists. Default is false
+    * `saveAsName` - The name to save the PDF as in the browser
+    * `src` - A full URL or path relative to the web root of the source
+    * `srcfile` - The absolute path to a source file
+    * `mimeType` - The mime type of the source. Default is text/html. Possible values are text/html, text/plain, application/xml, image/jpeg, image/png, image/bmp, image/gif
+    * `unit` - The unit of measurement to use. Default is inches. Possible values are in, cm
+* `documentitem` -  specifies header, footer, and pagebreaks within a document body or `documentsection`
+  * The following attributes are available to the `documentitem` component
+    * `type` A string which dictates the type of item.  Accepted values are `pagebreak`|`header`|`footer`
+    * `evalAtPrint` This attribute is deprecated as all content is evaluated when the body of the tag is processed
+* `documentsection` - Divides a PDF document into sections. Used in conjunction with a `documentitem` component, each section can have unique headers, footers, and page numbers. A page break will always precede a section
+  * The following attributes are available to the `documentsection` component
+    * `marginBottom` - The bottom margin of the section in the unit specified in the `document` component.
+    * `marginLeft` - The left margin of the section in the unit specified in the `document` component.
+    * `marginRight` - The right margin of the section in the unit specified in the `document` component.
+    * `marginTop` - The top margin of the section in the unit specified in the `document` component.
+    * `mimeType` - The mime type of the content.  If the content is a file, the mime type is determined by the file extension.  If the content is a URL, the mime type is determined by the HTTP response.
+    * `name` - The name of the section.  This is used as a bookmark for the section.
+    * `srcfile` - The absolute path of the file to include in the section.
+    * `src` - The URL or path relative to the web root of the content to include in the section.
+    * `userAgent` - The HTTP user agent identifier to use when fetching the content from a URL. Not currently implemented
+    * `authPassword` - The authentication password to use when fetching the content from a URL. Not currently implemented
+    * `authUser` - The authentication user name to use when fetching the content from a URL. Not currently implemented
+
+## Examples
+
+Simple example using tag-based syntax to generate a physical file:
+
+```html
+<bx:set testImage = "https://ortus-public.s3.amazonaws.com/logos/ortus-medium.jpg"/>
+<bx:document format="pdf" filename="/path/to/mydocument.pdf">
+	<!--- Header for all sections --->
+	<bx:documentitem type="header">
+		<h1>This is my Header</h1>
+	</bx:documentitem>
+	<!--- Footer for all sections --->
+	<bx:documentitem type="footer">
+		<h1>This is My Footer</h1>
+		<bx:output><p>Page #bxdocument.currentpagenumber# of #bxdocument.totalpages#</p></bx:output>
+	</bx:documentitem>
+	<!--- Document section, which will be bookmarked as "Section 1" --->
+	<bx:documentsection name="Section 1">
+		<h1>Section 1</h1>
+	</bx:documentsection>
+	<!--- Document section, which will be bookmarked as "Section 2" --->
+	<bx:documentsection name="Section 2">
+		<h1>Section 2</h1>
+	</bx:documentsection>
+	<!--- Document section, which contains an image --->
+	<bx:documentsection src="#testImage#">
+</bx:document>
 ```
 
-The `SetupTemplate` task will ask you for your module name, id and description and configure the template for you! Enjoy!
+Example using script syntax to create a variable containing the binary contents of the PDF, which is then written to a file
 
-## Directory Structure
+```javascript
+document format="pdf" variable="myPDF"{
+	documentsection name="Section 1"{
+		writeOutput("<h1>Section 1</h1>");
+		include "/path/to/section1.bxm";
+	}
+	documentsection name="Section 2"{
+		writeOutput("<h1>Section 2</h1>");
+		include "/path/to/section2.bxm";
+	}
+}
 
-Here is a brief overview of the directory structure:
-
-* `.github/workflows` - These are the github actions to test and build the module via CI
-* `build` - This is a temporary non-sourced folder that contains the build assets for the module that gradle produces
-* `gradle` - The gradle wrapper and configuration
-* `src` - Where your module source code lives
-* `.cfformat.json` - A CFFormat using the Ortus Standards
-* `.editorconfig` - Smooth consistency between editors
-* `.gitattributes` - Git attributes
-* `.gitignore` - Basic ignores. Modify as needed.
-* `.markdownlint.json` - A linting file for markdown docs
-* `.ortus-java-style.xml` - Ortus Java Style for IntelliJ, VScode, Eclipse.
-* `box.json` - The box.json for your module used to publish to ForgeBox
-* `build.gradle` - The gradle build file for the module
-* `changelog.md` - A nice changelog tracking file
-* `CONTRIBUTING.md` - A contribution guideline
-* `gradlew` - The gradle wrapper
-* `gradlew.bat` - The gradle wrapper for windows
-* `ModuleConfig.cfc` - Your module's configuration. Modify as needed.
-* `readme.md` - Your module's readme. Modify as needed.
-* `settings.gradle` - The gradle settings file
-
-Here is a brief overview of the source directory structure:
-
-* `build` - Build scripts and assets
-* `main` - The main module source code
-  * `bx` - The BoxLang source code
-  * `ModuleConfig.bx` - The BoxLang module configuration
-    * `bifs` - BoxLang built-in functions
-    * `components` - BoxLang components
-    * `config` - BoxLang configuration, schedulers, etc.
-    * `interceptors` - BoxLang interceptors
-    * `libs` - Java libraries to use that are NOT managed by gradle
-    * `models` - BoxLang models
-  * `java` - Java source code
-  * `resources` - Resources for the module placed in final jar
-* `test`
-  * `bx` - The BoxLang test code
-  * `java` - Java test code
-  * `resources` - Resources for testing
-    * `libs` - BoxLang binary goes here for now.
-
-## Project Properties
-
-The project name is defined in the `settings.gradle` file.  You can change it there.
-The project version, BoxLang Version and JDK version is defined in the `build.gradle` file.  You can change it there.
-
-## Gradle Tasks
-
-Before you get started, you need to run the `downloadBoxLang` task in order to download the latest BoxLang binary until we publish to Maven.
-
-```bash
-gradle downloadBoxLang
+fileWrite( "/path/to/mydocument.pdf", myPDF );
 ```
-
-This will store the binary under `/src/test/resources/libs` for you to use in your tests and compiler. Here are some basic tasks
-
-
-| Task                | Description                                                                                                        	|
-|---------------------|---------------------------------------------------------------------------------------------------------------------|
-| `build`             | The default lifecycle task that triggers the build process, including tasks like `clean`, `assemble`, and others. 	|
-| `clean`             | Deletes the `build` folders. It helps ensure a clean build by removing any previously generated artifacts.			|
-| `compileJava`       | Compiles Java source code files located in the `src/main/java` directory											|
-| `compileTestJava`   | Compiles Java test source code files located in the `src/test/java` directory										|
-| `dependencyUpdates` | Checks for updated versions of all dependencies															 			|
-| `downloadBoxLang`   | Downloads the latest BoxLang binary for testing																		|
-| `jar`               | Packages your project's compiled classes and resources into a JAR file `build/libs` folder							|
-| `javadoc`           | Generates the Javadocs for your project and places them in the `build/docs/javadoc` folder							|
-| `serviceLoader`     | Generates the ServiceLoader file for your project																	|
-| `spotlessApply`     | Runs the Spotless plugin to format the code																			|
-| `spotlessCheck`     | Runs the Spotless plugin to check the formatting of the code														|
-| `tasks`			  | Show all the available tasks in the project																			|
-| `test`              | Executes the unit tests in your project and produces the reports in the `build/reports/tests` folder				|
-
-## Tests
-
-Please use the `src/test` folder for your unit tests.  You can either test using TestBox o JUnit if it's Java.
-
-## Github Actions Automation
-
-The github actions will clone, test, package, deploy your module to ForgeBox and the Ortus S3 accounts for API Docs and Artifacts.  So please make sure the following environment variables are set in your repository.
-
-> Please note that most of them are already defined at the org level
-
-* `FORGEBOX_API_TOKEN` - The Ortus ForgeBox API Token
-* `AWS_ACCESS_KEY` - The travis user S3 account
-* `AWS_ACCESS_SECRET` - The travis secret S3
-
-> Please contact the admins in the `#infrastructure` channel for these credentials if needed
-
-
-## Ortus Sponsors
-
-BoxLang is a professional open-source project and it is completely funded by the [community](https://patreon.com/ortussolutions) and [Ortus Solutions, Corp](https://www.ortussolutions.com).  Ortus Patreons get many benefits like a cfcasts account, a FORGEBOX Pro account and so much more.  If you are interested in becoming a sponsor, please visit our patronage page: [https://patreon.com/ortussolutions](https://patreon.com/ortussolutions)
-
-### THE DAILY BREAD
-
- > "I am the way, and the truth, and the life; no one comes to the Father, but by me (JESUS)" Jn 14:1-12

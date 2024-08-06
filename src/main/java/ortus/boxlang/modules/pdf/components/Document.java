@@ -50,7 +50,7 @@ public class Document extends Component {
 		super();
 		// Uncomment and define declare argument to this Component
 		declaredAttributes = new Attribute[] {
-		    new Attribute( Key.format, "string", "pdf" ), // "PDF|FlashPaper"
+		    new Attribute( Key.format, "string", "pdf", Set.of( Validator.valueOneOf( "pdf", "PDF" ) ) ), // "PDF|FlashPaper"
 		    new Attribute( ModuleKeys.encryption, "string", "none" ), // "128-bit|40-bit|none"
 		    new Attribute( ModuleKeys.localUrl, "boolean", false ), // "yes|no"
 		    new Attribute( Key.variable, "string" ), // "output variable name"
@@ -99,11 +99,14 @@ public class Document extends Component {
 		    ), // mimetype of the source (when attribute src or srcfile are defined)
 		    new Attribute( ModuleKeys.unit, "string", "in" ), // "in|cm"
 
-		    new Attribute( ModuleKeys.permissions, "string" ), // "permission list"
-		    new Attribute( ModuleKeys.permissionspassword, "string" ), // "password to access restricted permissions"
-		    new Attribute( ModuleKeys.userPassword, "string" ), // "password"
-		    new Attribute( ModuleKeys.authPassword, "string" ), // "authentication password"
-		    new Attribute( ModuleKeys.authUser, "string" ), // "authentication user name"
+		    /**
+		     * Granular permissability is not yet supported
+		     */
+		    new Attribute( ModuleKeys.permissions, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "permission list"
+		    new Attribute( ModuleKeys.permissionspassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password to access restricted permissions"
+		    new Attribute( ModuleKeys.userPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password"
+		    new Attribute( ModuleKeys.authPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication password"
+		    new Attribute( ModuleKeys.authUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication user name"
 
 		    /**
 		     * URL resolution attributes which are not yet supported
@@ -126,16 +129,73 @@ public class Document extends Component {
 		};
 	}
 
+	// @formatter:off
 	/**
-	 * Describe what the invocation of your component does
+	 * Component to generate PDF documents from HTML content
 	 *
 	 * @param context        The context in which the Component is being invoked
 	 * @param attributes     The attributes to the Component
 	 * @param body           The body of the Component
 	 * @param executionState The execution state of the Component
 	 *
-	 * @attribute.foo Describe any expected arguments
+	 * @attribute.format [Deprecated] The format of the document to generate. This attribute is deprecated and will be removed in a future release as only PDF generation is supported
+	 *
+	 * @attribute.encryption The encryption level to use for the document. Default is none. Possible values are 128-bit, 40-bit, none
+	 *
+	 * @attribute.localUrl If true, the document will be generated with local URLs. Default is false
+	 *
+	 * @attribute.variable The name of the variable to store the generated PDF binary
+	 *
+	 * @attribute.backgroundVisible If true, the background will be visible. Default is true
+	 *
+	 * @attribute.bookmark If true, bookmarks will be generated. Default is true
+	 *
+	 * @attribute.htmlBookmark If true, it is possible to convert outlines to a list of named anchors (<a name="anchor_id">label</a>) or a headings structure ( <h1>... <h6>). Transforming of HTML hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps within the same document are supported as well
+	 *
+	 * @attribute.orientation The orientation of the document. Default is portrait. Possible values are portrait, landscape
+	 *
+	 * @attribute.scale The percentage to scale the document. Must be less than 100
+	 *
+	 * @attribute.marginBottom The bottom margin of the document
+	 *
+	 * @attribute.marginLeft The left margin of the document
+	 *
+	 * @attribute.marginRight The right margin of the document
+	 *
+	 * @attribute.marginTop The top margin of the document
+	 *
+	 * @attribute.pageWidth The width of the page in inches
+	 *
+	 * @attribute.pageHeight The height of the page in inches
+	 *
+	 * @attribute.fontEmbed If true, fonts will be embedded in the document. Default is true
+	 *
+	 * @attribute.fontDirectory The directory where fonts are located
+	 *
+	 * @attribute.openpassword The password to open protected documents
+	 *
+	 * @attribute.ownerPassword The password to access restricted permissions
+	 *
+	 * @attribute.pageType The type of page to generate. Default is A4.
+	 *
+	 * @attribute.pdfa If true, the document will be generated as a PDF/A document. Default is false
+	 *
+	 * @attribute.filename The filename to write the PDF to
+	 *
+	 * @attribute.overwrite If true, the file will be overwritten if it exists. Default is false
+	 *
+	 * @attribute.saveAsName The name to save the PDF as in the browser
+	 *
+	 * @attribute.src A full URL or path relative to the web root of the source
+	 *
+	 * @attribute.srcfile The absolute path to a source file
+	 *
+	 * @attribute.mimeType The mime type of the source. Default is text/html. Possible values are text/html, text/plain, application/xml, image/jpeg, image/png, image/bmp, image/gif
+	 *
+	 * @attribute.unit The unit of measurement to use. Default is inches. Possible values are in, cm
+	 *
 	 */
+	// @formatter:on
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
 
 		context.getDefaultAssignmentScope().put( PDFUtil.DOCUMENT_LOCAL_VARIABLE, PDFUtil.DOCUMENT_LOCAL_PLACEHOLDERS );

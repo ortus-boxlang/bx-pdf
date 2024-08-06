@@ -42,25 +42,25 @@ public class DocumentItem extends Component {
 		// Uncomment and define declare argument to this Component
 		declaredAttributes = new Attribute[] {
 		    new Attribute( Key.type, "string" ), // "pagebreak|header|footer"
-		    new Attribute( ModuleKeys.evalAtPrint, "string" ) // "true"
+		    new Attribute( ModuleKeys.evalAtPrint, "string", true ) // "true"
 		};
 	}
 
+	// @formatter:off
 	/**
-	 * Describe what the invocation of your component does
+	 * Component which specifies header, footer, and pagebreaks within a document body
 	 *
 	 * @param context        The context in which the Component is being invoked
 	 * @param attributes     The attributes to the Component
 	 * @param body           The body of the Component
 	 * @param executionState The execution state of the Component
 	 *
-	 * @attribute.foo Describe any expected arguments
+	 * @attribute.type string pagebreak|header|footer
+	 *
+	 * @attribute.evalAtPrint A boolean which determines if the contents of the cfdocumentitem tag body has to be evaluated at the time of printing the document.  This attribute is deprecated as all content is evaluated at print time.
 	 */
+	// @formatter:on
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
-		if ( attributes.get( Key.type ).equals( "pagebreak" ) ) {
-			context.writeToBuffer( "<div style='page-break-after: always;'></div>", true );
-			return DEFAULT_RETURN;
-		}
 
 		// First check for a document section
 		IStruct parentState = context.findClosestComponent( ModuleKeys.DocumentSection );
@@ -70,6 +70,11 @@ public class DocumentItem extends Component {
 			if ( parentState == null ) {
 				throw new BoxRuntimeException( "DocumentItem must be nested in the body of an Document component" );
 			}
+		}
+
+		if ( attributes.get( Key.type ).equals( "pagebreak" ) ) {
+			context.writeToBuffer( "<div style='page-break-after: always;'></div>", true );
+			return DEFAULT_RETURN;
 		}
 
 		StringBuffer buffer = new StringBuffer();

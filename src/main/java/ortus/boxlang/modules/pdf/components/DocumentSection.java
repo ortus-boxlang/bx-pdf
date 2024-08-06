@@ -57,23 +57,36 @@ public class DocumentSection extends Component {
 		    new Attribute( ModuleKeys.srcfile, "string" ), // "absolute path of file"
 		    // URL attributes
 		    new Attribute( ModuleKeys.src, "string" ), // "URL|path relative to web root"
-		    new Attribute( ModuleKeys.userAgent, "string" ), // "HTTP user agent identifier"
-		    new Attribute( ModuleKeys.authPassword, "string" ), // "authentication password"
-		    new Attribute( ModuleKeys.authUser, "string" ), // "authentication user name"
+		    new Attribute( ModuleKeys.userAgent, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "HTTP user agent identifier"
+		    new Attribute( ModuleKeys.authPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication password"
+		    new Attribute( ModuleKeys.authUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication user name"
 
 		};
 	}
 
+	// @formatter:off
 	/**
-	 * Describe what the invocation of your component does
+	 * Divides a PDF document into sections. Used in conjunction with a `documentitem` component, each section can have unique headers, footers, and page numbers.
 	 *
 	 * @param context        The context in which the Component is being invoked
 	 * @param attributes     The attributes to the Component
 	 * @param body           The body of the Component
 	 * @param executionState The execution state of the Component
 	 *
-	 * @attribute.foo Describe any expected arguments
+	 * @attribute.marginBottom The bottom margin of the section in the unit specified in the `document` component.
+	 * @attribute.marginLeft The left margin of the section in the unit specified in the `document` component.
+	 * @attribute.marginRight The right margin of the section in the unit specified in the `document` component.
+	 * @attribute.marginTop The top margin of the section in the unit specified in the `document` component.
+	 * @attribute.mimeType The mime type of the content.  If the content is a file, the mime type is determined by the file extension.  If the content is a URL, the mime type is determined by the HTTP response.
+	 * @attribute.name The name of the section.  This is used as a bookmark for the section.
+	 * @attribute.srcfile The absolute path of the file to include in the section.
+	 * @attribute.src The URL or path relative to the web root of the content to include in the section.
+	 * @attribute.userAgent The HTTP user agent identifier to use when fetching the content from a URL. Not currently implemented
+	 * @attribute.authPassword The authentication password to use when fetching the content from a URL. Not currently implemented
+	 * @attribute.authUser The authentication user name to use when fetching the content from a URL. Not currently implemented
+	 *
 	 */
+	// @formatter:on
 	public BodyResult _invoke( IBoxContext context, IStruct attributes, ComponentBody body, IStruct executionState ) {
 
 		context.getDefaultAssignmentScope().put( PDFUtil.DOCUMENT_LOCAL_VARIABLE, PDFUtil.DOCUMENT_LOCAL_PLACEHOLDERS );
