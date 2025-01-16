@@ -59,7 +59,6 @@ public class DocumentTest {
 	@BeforeAll
 	public static void setUp() throws MalformedURLException, IOException {
 		instance = BoxRuntime.getInstance( true, Path.of( "src/test/resources/boxlang.json" ).toString() );
-		System.out.println( "Temp Directory Exists " + FileSystemUtil.exists( tmpDirectory ) );
 		if ( FileSystemUtil.exists( tmpDirectory ) ) {
 			FileSystemUtil.deleteDirectory( tmpDirectory, true );
 		}

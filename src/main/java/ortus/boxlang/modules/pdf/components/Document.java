@@ -58,13 +58,17 @@ public class Document extends Component {
 		    // PDF Generation options
 		    new Attribute( ModuleKeys.backgroundVisible, "boolean", true ), // "yes|no"
 		    new Attribute( ModuleKeys.bookmark, "boolean", true ), // "yes|no"
-		    new Attribute( ModuleKeys.htmlBookmark, "boolean", false ), // If true, it is possible to convert outlines to a list of named anchors (<a
-		    // name="anchor_id">label</a>) or a headings structure (<h1>...<h6>). Transforming of HTML
-		    // hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps within the same
+		    new Attribute( ModuleKeys.htmlBookmark, "boolean", false ), // If true, it is possible to convert outlines
+		                                                                // to a list of named anchors (<a
+		    // name="anchor_id">label</a>) or a headings structure (<h1>...<h6>).
+		    // Transforming of HTML
+		    // hyperlinks to PDF hyperlinks (if not explicitly disabled). Hyperlink jumps
+		    // within the same
 		    // document are supported as well
 
 		    // Formatting attributes
-		    new Attribute( ModuleKeys.orientation, "string", "portrait", Set.of( Validator.valueOneOf( "portrait", "landscape" ) ) ), // "portrait|landscape"
+		    new Attribute( ModuleKeys.orientation, "string", "portrait",
+		        Set.of( Validator.valueOneOf( "portrait", "landscape" ) ) ), // "portrait|landscape"
 		    new Attribute( Key.scale, "integer" ), // "percentage less than 100"
 		    new Attribute( ModuleKeys.marginBottom, "double" ), // "number"
 		    new Attribute( ModuleKeys.marginLeft, "double" ), // "number"
@@ -94,28 +98,39 @@ public class Document extends Component {
 		        "string",
 		        "text/html",
 		        Set.of(
-		            Validator.valueOneOf( "text/html", "text/plain", "application/xml", "image/jpeg", "image/png", "image/bmp", "image/gif" )
-		        )
-		    ), // mimetype of the source (when attribute src or srcfile are defined)
+		            Validator.valueOneOf( "text/html", "text/plain", "application/xml", "image/jpeg",
+		                "image/png", "image/bmp", "image/gif" ) ) ), // mimetype of the source (when
+		                                                             // attribute src or srcfile are
+		                                                             // defined)
 		    new Attribute( ModuleKeys.unit, "string", "in" ), // "in|cm"
 
 		    /**
 		     * Granular permissability is not yet supported
 		     */
 		    new Attribute( ModuleKeys.permissions, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "permission list"
-		    new Attribute( ModuleKeys.permissionspassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password to access restricted permissions"
+		    new Attribute( ModuleKeys.permissionspassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password
+		                                                                                                    // to access
+		                                                                                                    // restricted
+		                                                                                                    // permissions"
 		    new Attribute( ModuleKeys.userPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password"
-		    new Attribute( ModuleKeys.authPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication password"
-		    new Attribute( ModuleKeys.authUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication user name"
+		    new Attribute( ModuleKeys.authPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication
+		                                                                                             // password"
+		    new Attribute( ModuleKeys.authUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "authentication user
+		                                                                                         // name"
 
 		    /**
 		     * URL resolution attributes which are not yet supported
 		     */
-		    new Attribute( Key.userAgent, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "HTTP user agent identifier"
-		    new Attribute( ModuleKeys.proxyHost, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "IP address or server name for proxy host"
-		    new Attribute( Key.proxyPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password for the proxy host"
+		    new Attribute( Key.userAgent, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "HTTP user agent
+		                                                                                   // identifier"
+		    new Attribute( ModuleKeys.proxyHost, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "IP address or
+		                                                                                          // server name for
+		                                                                                          // proxy host"
+		    new Attribute( Key.proxyPassword, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "password for the
+		                                                                                       // proxy host"
 		    new Attribute( Key.proxyPort, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "port of the proxy host"
-		    new Attribute( Key.proxyUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "user name for the proxy host"
+		    new Attribute( Key.proxyUser, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "user name for the proxy
+		                                                                                   // host"
 
 		    // Adobe only OpenOffice integration - not supported
 		    new Attribute( ModuleKeys.tagged, "string", Set.of( Validator.NOT_IMPLEMENTED ) ), // "yes|no"
@@ -222,8 +237,7 @@ public class Document extends Component {
 			        .map( StringCaster::cast )
 			        .map( path -> path.substring( 0, 4 ).equalsIgnoreCase( "http" ) ? path
 			            : FileSystemUtil.expandPath( context, path ).absolutePath().toString() )
-			        .collect( Collectors.joining( ListUtil.DEFAULT_DELIMITER ) )
-			);
+			        .collect( Collectors.joining( ListUtil.DEFAULT_DELIMITER ) ) );
 		}
 
 		StringBuffer	buffer			= new StringBuffer();
@@ -267,34 +281,28 @@ public class Document extends Component {
 			pdf = PDFUtil.generatePDF( buffer, context, attributes, executionState );
 		}
 
-		// Unit test convenience variable which will place pdf object in to the variables scope
-		if ( attributes.containsKey( ModuleKeys.isTestMode ) && BooleanCaster.cast( attributes.get( ModuleKeys.isTestMode ) ) ) {
-
-			// System.out.println( "PDF HTML Content:" );
-			// System.out.println( W3CDom.asString( pdf.getRenderer().getDocument(), null ) );
+		// Unit test convenience variable which will place pdf object in to the
+		// variables scope
+		if ( attributes.containsKey( ModuleKeys.isTestMode )
+		    && BooleanCaster.cast( attributes.get( ModuleKeys.isTestMode ) ) ) {
 
 			ExpressionInterpreter.setVariable(
 			    context,
 			    "bxPDF",
-			    pdf
-			);
+			    pdf );
 		}
 
 		if ( variable != null ) {
 			ExpressionInterpreter.setVariable(
 			    context,
 			    variable,
-			    pdf.toBinary()
-			);
+			    pdf.toBinary() );
 			return DEFAULT_RETURN;
 		} else if ( fileName != null ) {
-			System.out.println( "Original file path " + fileName );
 			fileName = FileSystemUtil.expandPath( context, fileName ).absolutePath().toString();
-			System.out.println( "Writing PDF to " + fileName );
 			pdf.toFile(
 			    fileName,
-			    attributes.getAsBoolean( Key.overwrite )
-			);
+			    attributes.getAsBoolean( Key.overwrite ) );
 			return DEFAULT_RETURN;
 		} else {
 			IStruct interceptorArgs = Struct.of(
@@ -302,13 +310,11 @@ public class Document extends Component {
 			    Key.mimetype, "application/pdf",
 			    ModuleKeys.filename, browserFileName != null ? browserFileName : "Document.pdf",
 			    Key.reset, true,
-			    Key.abort, true
-			);
+			    Key.abort, true );
 			runtime.getInterceptorService().announce( "writeToBrowser", interceptorArgs );
 			// if we get here, the web runtime is not available
 			throw new BoxRuntimeException(
-			    " Web runtime not available.  The web-support module is required in order to write a PDF to the browser."
-			);
+			    " Web runtime not available.  The web-support module is required in order to write a PDF to the browser." );
 		}
 
 	}
