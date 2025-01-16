@@ -132,11 +132,11 @@ public class DocumentTest {
 		// @formatter:off
 		instance.executeSource(
 		    """
-		    document format="pdf" variable="result" isTestMode=true{
-		    	documentsection name="Section 1"{
+		    bx:document format="pdf" variable="result" isTestMode=true{
+		    	bx:documentsection name="Section 1"{
 		    		writeOutput("<h1>Section 1</h1>")
 				}
-		    	documentsection name="Section 2"{
+		    	bx:documentsection name="Section 2"{
 		    		writeOutput("<h1>Section 2</h1>")
 				}
 			}
