@@ -306,6 +306,7 @@ public class Document extends Component {
 			return DEFAULT_RETURN;
 		} else {
 			IStruct interceptorArgs = Struct.of(
+			    Key.context, context,
 			    Key.content, pdf.toBinary(),
 			    Key.mimetype, "application/pdf",
 			    ModuleKeys.filename, browserFileName != null ? browserFileName : "Document.pdf",
