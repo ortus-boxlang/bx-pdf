@@ -183,8 +183,10 @@ jobs:
       contents: write
       issues: write
     steps:
-      - name: Checkout LTS Repository
+      - name: Checkout Development Repository
         uses: actions/checkout@v4
+        with:
+          ref: development
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
