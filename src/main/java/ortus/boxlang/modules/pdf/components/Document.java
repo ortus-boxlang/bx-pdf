@@ -221,7 +221,7 @@ public class Document extends Component {
 		String variable = attributes.getAsString( Key.variable );
 
 		// Lucee and Adobe use different attributes for the variable name
-		if ( variable != null && attributes.containsKey( Key._NAME ) ) {
+		if ( variable == null && attributes.containsKey( Key._NAME ) ) {
 			variable = attributes.getAsString( Key._NAME );
 		}
 		String	fileName		= attributes.getAsString( ModuleKeys.filename );
