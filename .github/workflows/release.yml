@@ -183,15 +183,8 @@ jobs:
       contents: write
       issues: write
     steps:
-      - name: Checkout Development Repository
-        uses: actions/checkout@v4
-        if: env.LTS == 'false'
-        with:
-          ref: development
-
       - name: Checkout LTS Repository
         uses: actions/checkout@v4
-        if: env.LTS == 'true'
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
