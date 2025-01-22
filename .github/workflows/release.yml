@@ -110,6 +110,8 @@ jobs:
         with:
           name: boxlang-build
           path: |
+            build/distributions/**
+            build/libs/**
             build/reports/tests/**
             changelog.md
 
@@ -122,7 +124,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_SECRET }}
           SOURCE_DIR: "build/distributions"
-          DEST_DIR: "ortussolutions/boxlang-modules/${{ env.MODULE_ID }}/${{ env.VERSION }}"
+          DEST_DIR: "ortussolutions/ortus-boxlang/${{ env.MODULE_ID }}/${{ env.VERSION }}"
 
       # - name: Upload API Docs to S3
       #   uses: jakejarvis/s3-sync-action@master
@@ -134,6 +136,9 @@ jobs:
       #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_SECRET }}
       #     SOURCE_DIR: "build-coldbox/apidocs"
       #     DEST_DIR: ""
+
+      # - name: Publish to Maven Central
+      #   run: |
 
       - name: Publish to ForgeBox
         run: |
