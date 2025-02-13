@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -43,8 +41,10 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.modules.pdf.util.PDFUtil;
+import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.dynamic.casters.DoubleCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
+import ortus.boxlang.runtime.logging.BoxLangLogger;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
@@ -68,7 +68,7 @@ public class PDF {
 	/**
 	 * The logger instance
 	 */
-	private static final Logger			logger				= LoggerFactory.getLogger( PDF.class );
+	private static final BoxLangLogger	logger				= BoxRuntime.getInstance().getLoggingService().getLogger( "pdf" );
 
 	/**
 	 * The initial attributes provided to the component
@@ -294,7 +294,7 @@ public class PDF {
 			try {
 				renderer.getFontResolver().addFont( font.toAbsolutePath().toString(), font.getFileName().toString(), true );
 			} catch ( IOException e ) {
-				logger.atError().log(
+				logger.error(
 				    String.format(
 				        "Error adding font [%s].  The messageReceived was: %s",
 				        font.toAbsolutePath().toString(),
@@ -394,7 +394,7 @@ public class PDF {
 					partContent += "</div>\n";
 
 				}catch ( BoxRuntimeException e ) {
-					logger.atError().log(
+					logger.error(
 						String.format(
 							"Error generating PDF for document part [%s].  The messageReceived was: %s",
 							part.getAsString( Key._NAME ),
@@ -648,7 +648,7 @@ public class PDF {
 			renderer.layout();
 			renderer.createPDF( outputStream, true );
 		} catch ( IOException e ) {
-			logger.atError().log( "Error creating PDF", e );
+			logger.error( "Error creating PDF", e );
 		}
 	}
 }
