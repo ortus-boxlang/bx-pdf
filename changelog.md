@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated build processes
 - removed multi-version on changelogs
+- Updated Java dependencies to latest versions
 
 ## [1.0.0] - 2025-01-22
 
