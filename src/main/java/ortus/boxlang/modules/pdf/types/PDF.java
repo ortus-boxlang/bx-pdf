@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.slf4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -44,7 +45,6 @@ import ortus.boxlang.modules.pdf.util.PDFUtil;
 import ortus.boxlang.runtime.BoxRuntime;
 import ortus.boxlang.runtime.dynamic.casters.DoubleCaster;
 import ortus.boxlang.runtime.dynamic.casters.StringCaster;
-import ortus.boxlang.runtime.logging.BoxLangLogger;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
@@ -68,7 +68,7 @@ public class PDF {
 	/**
 	 * The logger instance
 	 */
-	private static final BoxLangLogger	logger				= BoxRuntime.getInstance().getLoggingService().getLogger( "pdf" );
+	private static final Logger			logger				= BoxRuntime.getInstance().getLoggingService().getLogger( PDF.class.getSimpleName() );
 
 	/**
 	 * The initial attributes provided to the component
