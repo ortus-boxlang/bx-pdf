@@ -6,20 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * * *
-* * *
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-02-14
+
 - Updated build processes
+- Fixed logger implementaton to latest runtime conventions
 - removed multi-version on changelogs
 - Updated Java dependencies to latest versions
 
 ## [1.0.0] - 2025-01-22
 
-## [1.0.0] - 2025-01-22
-
 - First iteration of this module
 
-[Unreleased]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.1.0...HEAD
+
+[1.1.0]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.0.0...v1.1.0
 
 [1.0.0]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.0.0...v1.0.0
