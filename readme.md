@@ -18,7 +18,7 @@
 This module provides PDF generation functionality to Boxlang
 
 
-## Components 
+## Components
 
 This module contributes the following Components to the language:
 
@@ -117,12 +117,12 @@ Simple example using tag-based syntax to generate a physical file:
 Example using script syntax to create a variable containing the binary contents of the PDF, which is then written to a file
 
 ```javascript
-document format="pdf" variable="myPDF"{
-    documentsection name="Section 1"{
+bx:document format="pdf" variable="myPDF"{
+    bx:documentsection name="Section 1"{
         writeOutput("<h1>Section 1</h1>");
         include "/path/to/section1.bxm";
     }
-    documentsection name="Section 2"{
+    bx:documentsection name="Section 2"{
         writeOutput("<h1>Section 2</h1>");
         include "/path/to/section2.bxm";
     }

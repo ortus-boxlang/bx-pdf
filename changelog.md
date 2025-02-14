@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2025-01-22
-
-## [1.0.0] - 2025-01-22
+- Updated build processes
+- Fixed logger implementaton to latest runtime conventions
+- removed multi-version on changelogs
+- Updated Java dependencies to latest versions
 
 ## [1.0.0] - 2025-01-22
 
@@ -20,4 +21,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.0.0...HEAD
 
 [1.0.0]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.0.0...v1.0.0
-
