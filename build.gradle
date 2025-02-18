@@ -39,7 +39,7 @@ repositories {
 dependencies {
 	// PDF generation libraries
 	implementation 'org.xhtmlrenderer:flying-saucer-core:9.11.3'
-	implementation 'org.xhtmlrenderer:flying-saucer-pdf:9.9.0'
+	implementation 'org.xhtmlrenderer:flying-saucer-pdf:9.11.3'
 	// Bouncycastle library
 	implementation 'org.bouncycastle:bcprov-ext-jdk18on:1.78.1'
 	// HTML5 -> W3C DOM Parser
