@@ -443,14 +443,12 @@ public class PDF {
 		if ( encryptionType == 0 && attributes.get( ModuleKeys.openpassword ) == null && attributes.get( ModuleKeys.ownerPassword ) != null ) {
 			return;
 		}
-		PDFEncryption pdfEncryption = new PDFEncryption();
-		pdfEncryption.setEncryptionType( encryptionType );
-		if ( attributes.get( ModuleKeys.openpassword ) != null ) {
-			pdfEncryption.setUserPassword( attributes.getAsString( ModuleKeys.openpassword ).getBytes() );
-		}
-		if ( attributes.get( ModuleKeys.ownerPassword ) != null ) {
-			pdfEncryption.setOwnerPassword( attributes.getAsString( ModuleKeys.ownerPassword ).getBytes() );
-		}
+		PDFEncryption pdfEncryption = new PDFEncryption(
+		    attributes.get( ModuleKeys.openpassword ) != null ? attributes.getAsString( ModuleKeys.openpassword ).getBytes() : null,
+		    attributes.get( ModuleKeys.ownerPassword ) != null ? attributes.getAsString( ModuleKeys.ownerPassword ).getBytes() : null,
+		    0,
+		    encryptionType
+		);
 		renderer.setPDFEncryption( pdfEncryption );
 	}
 
