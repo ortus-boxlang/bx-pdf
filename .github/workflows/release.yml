@@ -218,8 +218,8 @@ jobs:
 
       - name: Bump Version
         run: |
-          gradle bumpMinorVersion --stacktrace --console=plain
           git pull
+          gradle bumpPatchVersion --stacktrace --console=plain
 
       - name: Commit Version Bump
         uses: EndBug/add-and-commit@v9.1.4
