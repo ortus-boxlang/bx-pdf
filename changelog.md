@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-03-01
+
 ## [1.3.0] - 2025-03-01
 
 ### Fixed
@@ -33,7 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First iteration of this module
 
-[Unreleased]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.3.1...HEAD
+
+[1.3.1]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.3.0...v1.3.1
 
 [1.3.0]: https://github.com/ortus-boxlang/bx-pdf/compare/v1.2.0...v1.3.0
 
