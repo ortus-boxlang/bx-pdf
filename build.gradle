@@ -41,7 +41,7 @@ dependencies {
 	// Bouncycastle library
 	implementation 'org.bouncycastle:bcprov-ext-jdk18on:1.78.1'
 	// HTML5 -> W3C DOM Parser
-	implementation 'org.jsoup:jsoup:1.18.3'
+	implementation 'org.jsoup:jsoup:1.19.1'
 
 	// Look for it in the local build directory
 	// You must run `./gradle build -x test` in the BoxLang project
