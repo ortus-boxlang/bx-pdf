@@ -302,7 +302,8 @@ public class Document extends Component {
 			fileName = FileSystemUtil.expandPath( context, fileName ).absolutePath().toString();
 			pdf.toFile(
 			    fileName,
-			    attributes.getAsBoolean( Key.overwrite ) );
+			    BooleanCaster.cast( attributes.get( Key.overwrite ) )
+			);
 			return DEFAULT_RETURN;
 		} else {
 			IStruct interceptorArgs = Struct.of(
