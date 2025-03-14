@@ -3,13 +3,13 @@
 	"version": "@build.version@+@build.number@",
 	"location": "https://downloads.ortussolutions.com/ortussolutions/boxlang-modules/bx-pdf/@build.version@/bx-pdf-@build.version@.zip",
 	"author": "Ortus Solutions",
-	"homepage": "https://github.com/boxlang-modules/bx-pdf",
-	"documentation": "https://github.com/boxlang-modules/bx-pdf",
+	"homepage": "https://github.com/ortus-boxlang/bx-pdf",
+	"documentation": "https://github.com/ortus-boxlang/bx-pdf",
 	"repository": {
 		"type": "git",
-		"URL": "https://github.com/boxlang-modules/bx-pdf"
+		"URL": "https://github.com/ortus-boxlang/bx-pdf"
 	},
-	"bugs": "https://github.com/boxlang-modules/bx-pdf/issues",
+	"bugs": "https://github.com/ortus-boxlang/bx-pdf/issues",
 	"slug": "bx-pdf",
 	"shortDescription": "PDF Module for BoxLang",
 	"type": "boxlang-modules",
