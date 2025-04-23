@@ -748,6 +748,7 @@ public class PDF {
 		try ( ByteArrayOutputStream outputStream = new ByteArrayOutputStream() ) {
 			renderer.layout();
 			renderer.createPDF( outputStream, true );
+			renderer.finishPDF();
 			return outputStream.toByteArray();
 		} catch ( IOException e ) {
 			throw new BoxIOException( e );
@@ -761,6 +762,7 @@ public class PDF {
 		    OutputStream outputStream = Files.newOutputStream( Path.of( filename ), overwrite ? StandardOpenOption.CREATE : StandardOpenOption.CREATE_NEW ) ) {
 			renderer.layout();
 			renderer.createPDF( outputStream, true );
+			renderer.finishPDF();
 		} catch ( IOException e ) {
 			logger.error( "Error creating PDF", e );
 		}

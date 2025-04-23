@@ -74,7 +74,7 @@ public class DocumentTest {
 	@AfterAll
 	public static void teardown() {
 		if ( FileSystemUtil.exists( tmpDirectory ) ) {
-			// FileSystemUtil.deleteDirectory( tmpDirectory, true );
+			FileSystemUtil.deleteDirectory( tmpDirectory, true );
 		}
 	}
 
