@@ -258,4 +258,63 @@ public class DocumentTest {
 		// }
 	}
 
+	@DisplayName( "Can create a document section without HTML content" )
+	@Test
+	public void testEmptyDocumentSection() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				bx:document format="pdf" filename="#outputFile#" overwrite=true bookmark=false isTestMode=true{
+					bx:documentsection name="Section 1" {
+						writeoutput('ra');
+					}
+				}
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 0, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+	}
+
+	@DisplayName( "Can create a document section with a remote image in the document section" )
+	@Test
+	public void testDocumentSectionWithRemoteImage() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				<bx:set testImage = "https://ortus-public.s3.amazonaws.com/logos/ortus-medium.jpg"/>
+				<bx:document format="pdf" filename="#outputFile#" overwrite=true isTestMode=true>
+					<!--- Header for all sections --->
+					<bx:documentitem type="header">
+						<h1>This is my Header</h1>
+					</bx:documentitem>
+					<!--- Footer for all sections --->
+					<bx:documentitem type="footer">
+						<h1>This is My Footer</h1>
+						<bx:output><p>Page #bxdocument.currentpagenumber# of #bxdocument.totalpages#</p></bx:output>
+					</bx:documentitem>
+					<!--- Document section, which will be bookmarked as "Section 1" --->
+					<bx:documentsection name="Section 1">
+						<h1>Section 1</h1>
+					</bx:documentsection>
+					<!--- Document section, which will be bookmarked as "Section 2" --->
+					<bx:documentsection name="Section 2">
+						<h1>Section 2</h1>
+					</bx:documentsection>
+					<!--- Document section, which contains an image --->
+					<bx:documentsection src="#testImage#">
+				</bx:document>
+		      """,
+		    context, BoxSourceType.BOXTEMPLATE );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 8, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+	}
+
 }
