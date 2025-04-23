@@ -244,6 +244,7 @@ public class Document extends Component {
 		Object			sourceFile		= null;
 		PDF				pdf				= null;
 		byte[]			binarySource	= null;
+		boolean			isRemoteFile	= false;
 
 		if ( attributes.containsKey( ModuleKeys.src ) ) {
 			attributes.put( ModuleKeys.srcfile, attributes.getAsString( ModuleKeys.src ) );
@@ -254,8 +255,12 @@ public class Document extends Component {
 			String srcFile = attributes.getAsString( ModuleKeys.srcfile );
 			if ( !srcFile.substring( 0, 4 ).equalsIgnoreCase( "http" ) ) {
 				srcFile = FileSystemUtil.expandPath( context, srcFile ).absolutePath().toString();
+			} else {
+				isRemoteFile = true;
 			}
-			sourceFile = FileSystemUtil.read( srcFile );
+			if ( !isRemoteFile ) {
+				sourceFile = FileSystemUtil.read( srcFile );
+			}
 			if ( mimeType == null ) {
 				attributes.put( ModuleKeys.mimeType, FileSystemUtil.getMimeType( srcFile ) );
 			}
@@ -267,7 +272,7 @@ public class Document extends Component {
 			}
 		}
 
-		if ( sourceFile != null ) {
+		if ( !isRemoteFile && sourceFile != null ) {
 			if ( sourceFile instanceof String ) {
 				buffer.append( sourceFile );
 			} else {
@@ -275,7 +280,9 @@ public class Document extends Component {
 			}
 		}
 
-		if ( binarySource != null ) {
+		if ( isRemoteFile ) {
+			pdf = new PDF( attributes.getAsString( ModuleKeys.srcfile ), attributes );
+		} else if ( binarySource != null ) {
 			pdf = PDFUtil.generatePDF( binarySource, context, attributes, executionState );
 		} else {
 			pdf = PDFUtil.generatePDF( buffer, context, attributes, executionState );

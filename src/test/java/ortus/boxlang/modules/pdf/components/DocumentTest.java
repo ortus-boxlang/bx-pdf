@@ -234,4 +234,28 @@ public class DocumentTest {
 		assertTrue( FileSystemUtil.exists( testFile ) );
 	}
 
+	@DisplayName( "It tests generating a PDF from a remote URL" )
+	@Test
+	public void testRemoteURLGeneration() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+		    bx:document format="pdf" src="https://www.raymondcamden.com" filename="#outputFile#" overwrite=true isTestMode=true;
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		// Un-comment to Debug generated HTML
+		// PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		// try {
+		// FileSystemUtil.write( "src/test/resources/tmp/Document/test.html", PDFUtil.documentToString( pdfObject.getRenderer().getDocument() ) );
+		// // System.out.println( "document content: " + PDFUtil.documentToString( parsedDocument ) );
+		// } catch ( TransformerException e ) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+	}
+
 }

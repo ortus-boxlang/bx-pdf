@@ -17,10 +17,21 @@
  */
 package ortus.boxlang.modules.pdf.util;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.jsoup.Jsoup;
 import org.jsoup.helper.W3CDom;
+import org.w3c.dom.Document;
 
 import ortus.boxlang.modules.pdf.types.PDF;
 import ortus.boxlang.runtime.context.IBoxContext;
@@ -29,6 +40,7 @@ import ortus.boxlang.runtime.dynamic.casters.StructCaster;
 import ortus.boxlang.runtime.scopes.Key;
 import ortus.boxlang.runtime.types.IStruct;
 import ortus.boxlang.runtime.types.Struct;
+import ortus.boxlang.runtime.types.exceptions.BoxIOException;
 import ortus.boxlang.runtime.util.FileSystemUtil;
 
 public class PDFUtil {
@@ -209,6 +221,14 @@ public class PDFUtil {
 		return new W3CDom().fromJsoup( doc );
 	}
 
+	public synchronized static org.w3c.dom.Document parseRemoteFile( String url ) {
+		try {
+			return new W3CDom().fromJsoup( Jsoup.connect( url ).get() );
+		} catch ( IOException e ) {
+			throw new BoxIOException( e );
+		}
+	}
+
 	/**
 	 * Extract the header from a component execution state
 	 *
@@ -239,6 +259,31 @@ public class PDFUtil {
 		    .filter( item -> item.getAsString( Key.type ).toLowerCase() == "footer" )
 		    .findFirst()
 		    .orElse( null );
+	}
+
+	/**
+	 * Utility methods to view the generated HTML to be parsed
+	 *
+	 * @param document
+	 *
+	 * @return
+	 *
+	 * @throws TransformerException
+	 */
+	public static String documentToString( Document document ) throws TransformerException {
+		Transformer transformer = getTransformer();
+		transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
+		transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
+		transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "4" );
+
+		StringWriter stringWriter = new StringWriter();
+		transformer.transform( new DOMSource( document ), new StreamResult( stringWriter ) );
+		return stringWriter.toString();
+	}
+
+	private static Transformer getTransformer() throws TransformerConfigurationException {
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		return transformerFactory.newTransformer();
 	}
 
 }
