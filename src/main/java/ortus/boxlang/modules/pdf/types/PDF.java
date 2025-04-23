@@ -383,10 +383,8 @@ public class PDF {
 					String partName     = partAttributes.getAsString( Key._NAME );
 
 					if( bookmarkSections && partName != null ) {
-						bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
+						bookmarks.add( "<bookmark name='" + partName + "' href='#" + partIdentifier + "'/>" );
 					}
-
-					// partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
 
 					if ( header != null ) {
 						partContent += "<div class='bx-pdf-header'>" + header + "</div>\n";
@@ -455,14 +453,11 @@ public class PDF {
 			} )
 		    .collect( Collectors.joining( "\n" ) );
 		// @formatter:on
-
-		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
-
-		content	+= "</head>\n<body>\n";
-
 		if ( !bookmarks.isEmpty() ) {
 			content += "<bookmarks>\n" + bookmarks.stream().collect( Collectors.joining( "\n" ) ) + "\n</bookmarks>\n";
 		}
+		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
+		content	+= "</head>\n<body>\n";
 
 		content	+= bodyContents;
 

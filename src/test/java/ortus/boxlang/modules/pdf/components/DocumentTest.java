@@ -74,7 +74,7 @@ public class DocumentTest {
 	@AfterAll
 	public static void teardown() {
 		if ( FileSystemUtil.exists( tmpDirectory ) ) {
-			FileSystemUtil.deleteDirectory( tmpDirectory, true );
+			// FileSystemUtil.deleteDirectory( tmpDirectory, true );
 		}
 	}
 
@@ -315,6 +315,34 @@ public class DocumentTest {
 
 		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
 		assertEquals( 8, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+	}
+
+	@DisplayName( "Will correctly create bookmarks for document sections" )
+	@Test
+	public void testBookmarkSections() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				bx:document format="pdf" filename="#outputFile#" overwrite=true bookmark=true isTestMode=true{
+					bx:documentsection name="Bookmark 1" {
+						writeoutput('ra');
+					}
+
+					bx:documentsection name="Bookmark 2" {
+						writeoutput('<h1>Not a Bookmark</h1>');
+					}
+				}
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 1, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+		// NodeList headElements = pdfObject.getRenderer().getDocument().getElementsByTagName( "head" );
+		// assertEquals( "bookmarks", headElements.item( 0 ).getChildNodes().item( 0 ).getNodeName() );
+		assertEquals( 2, pdfObject.getRenderer().getDocument().getElementsByTagName( "bookmark" ).getLength() );
 	}
 
 }

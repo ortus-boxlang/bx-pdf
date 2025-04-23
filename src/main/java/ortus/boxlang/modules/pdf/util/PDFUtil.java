@@ -31,6 +31,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.jsoup.Jsoup;
 import org.jsoup.helper.W3CDom;
+import org.jsoup.parser.Parser;
 import org.w3c.dom.Document;
 
 import ortus.boxlang.modules.pdf.types.PDF;
@@ -216,7 +217,14 @@ public class PDFUtil {
 	 * @return
 	 */
 	public synchronized static org.w3c.dom.Document parseContent( String content ) {
-		org.jsoup.nodes.Document doc = Jsoup.parse( content );
+		org.jsoup.nodes.Document doc;
+		try {
+			doc = Jsoup.parse( content, "", Parser.xmlParser() );
+		} catch ( Exception e ) {
+			// If parsing fails, try to parse as HTML5
+			doc = Jsoup.parse( content, "", Parser.htmlParser() );
+		}
+
 		// Should reuse W3CDom instance if converting multiple documents.
 		return new W3CDom().fromJsoup( doc );
 	}
