@@ -234,4 +234,115 @@ public class DocumentTest {
 		assertTrue( FileSystemUtil.exists( testFile ) );
 	}
 
+	@DisplayName( "It tests generating a PDF from a remote URL" )
+	@Test
+	public void testRemoteURLGeneration() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+		    bx:document format="pdf" src="https://www.raymondcamden.com" filename="#outputFile#" overwrite=true isTestMode=true;
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		// Un-comment to Debug generated HTML
+		// PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		// try {
+		// FileSystemUtil.write( "src/test/resources/tmp/Document/test.html", PDFUtil.documentToString( pdfObject.getRenderer().getDocument() ) );
+		// // System.out.println( "document content: " + PDFUtil.documentToString( parsedDocument ) );
+		// } catch ( TransformerException e ) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+	}
+
+	@DisplayName( "Can create a document section without HTML content" )
+	@Test
+	public void testEmptyDocumentSection() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				bx:document format="pdf" filename="#outputFile#" overwrite=true bookmark=false isTestMode=true{
+					bx:documentsection name="Section 1" {
+						writeoutput('ra');
+					}
+				}
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 0, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+	}
+
+	@DisplayName( "Can create a document section with a remote image in the document section" )
+	@Test
+	public void testDocumentSectionWithRemoteImage() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				<bx:set testImage = "https://ortus-public.s3.amazonaws.com/logos/ortus-medium.jpg"/>
+				<bx:document format="pdf" filename="#outputFile#" overwrite=true isTestMode=true>
+					<!--- Header for all sections --->
+					<bx:documentitem type="header">
+						<h1>This is my Header</h1>
+					</bx:documentitem>
+					<!--- Footer for all sections --->
+					<bx:documentitem type="footer">
+						<h1>This is My Footer</h1>
+						<bx:output><p>Page #bxdocument.currentpagenumber# of #bxdocument.totalpages#</p></bx:output>
+					</bx:documentitem>
+					<!--- Document section, which will be bookmarked as "Section 1" --->
+					<bx:documentsection name="Section 1">
+						<h1>Section 1</h1>
+					</bx:documentsection>
+					<!--- Document section, which will be bookmarked as "Section 2" --->
+					<bx:documentsection name="Section 2">
+						<h1>Section 2</h1>
+					</bx:documentsection>
+					<!--- Document section, which contains an image --->
+					<bx:documentsection src="#testImage#">
+				</bx:document>
+		      """,
+		    context, BoxSourceType.BOXTEMPLATE );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 8, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+	}
+
+	@DisplayName( "Will correctly create bookmarks for document sections" )
+	@Test
+	public void testBookmarkSections() {
+		variables.put( Key.of( "outputFile" ), testFile );
+		// @formatter:off
+		instance.executeSource(
+		    """
+				bx:document format="pdf" filename="#outputFile#" overwrite=true bookmark=true isTestMode=true{
+					bx:documentsection name="Bookmark 1" {
+						writeoutput('ra');
+					}
+
+					bx:documentsection name="Bookmark 2" {
+						writeoutput('<h1>Not a Bookmark</h1>');
+					}
+				}
+		      """,
+		    context, BoxSourceType.BOXSCRIPT );
+		// @formatter:on
+		assertTrue( FileSystemUtil.exists( testFile ) );
+
+		PDF pdfObject = ( PDF ) variables.get( ModuleKeys.bxPDF );
+		assertEquals( 1, pdfObject.getRenderer().getDocument().getElementsByTagName( "h1" ).getLength() );
+		// NodeList headElements = pdfObject.getRenderer().getDocument().getElementsByTagName( "head" );
+		// assertEquals( "bookmarks", headElements.item( 0 ).getChildNodes().item( 0 ).getNodeName() );
+		assertEquals( 2, pdfObject.getRenderer().getDocument().getElementsByTagName( "bookmark" ).getLength() );
+	}
+
 }

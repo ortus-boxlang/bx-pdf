@@ -19,6 +19,8 @@ package ortus.boxlang.modules.pdf.types;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -35,11 +37,13 @@ import org.slf4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xhtmlrenderer.layout.SharedContext;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xhtmlrenderer.pdf.PDFEncryption;
 
 import com.lowagie.text.pdf.PdfWriter;
 
+import ortus.boxlang.modules.pdf.util.Base64PDFReplacementFactory;
 import ortus.boxlang.modules.pdf.util.ModuleKeys;
 import ortus.boxlang.modules.pdf.util.PDFUtil;
 import ortus.boxlang.runtime.BoxRuntime;
@@ -168,7 +172,7 @@ public class PDF {
 	 * @param executionState
 	 */
 	public PDF( IStruct attributes, IStruct executionState ) {
-		renderer			= new ITextRenderer();
+		renderer			= newRenderer();
 		componentAttributes	= attributes;
 		parseDefaults( attributes, executionState );
 		parseEncryption( attributes );
@@ -179,6 +183,35 @@ public class PDF {
 			    .forEach( this::addFontDirectory );
 		}
 	};
+
+	/**
+	 * Constructor which generates the PDF from a remote URL
+	 *
+	 * @param attributes
+	 * @param executionState
+	 */
+	public PDF( String url, IStruct attributes ) {
+		renderer = newRenderer();
+		SharedContext sharedContext = renderer.getSharedContext();
+		sharedContext.setReplacedElementFactory( new Base64PDFReplacementFactory() );
+		sharedContext.getTextRenderer().setSmoothingThreshold( 0 );
+		componentAttributes = attributes;
+		parseEncryption( attributes );
+		generateFromRemote( url );
+	};
+
+	/**
+	 * Constructs a new ITextRenderer
+	 *
+	 * @return
+	 */
+	private ITextRenderer newRenderer() {
+		ITextRenderer	newRenderer		= new ITextRenderer();
+		SharedContext	sharedContext	= newRenderer.getSharedContext();
+		sharedContext.setPrint( true );
+		sharedContext.setInteractive( false );
+		return newRenderer;
+	}
 
 	/**
 	 * Add a binary item to the document
@@ -308,6 +341,20 @@ public class PDF {
 	}
 
 	/**
+	 * Generates the PDF from a remote URL
+	 *
+	 * @param url
+	 *
+	 * @return
+	 */
+	public PDF generateFromRemote( String url ) {
+		Document pdfDocument = PDFUtil.parseRemoteFile( url );
+		postProcessRemoteDocument( pdfDocument, url );
+		renderer.setDocument( pdfDocument );
+		return this;
+	}
+
+	/**
 	 * Generates the finalized PDF
 	 *
 	 * @return
@@ -336,10 +383,8 @@ public class PDF {
 					String partName     = partAttributes.getAsString( Key._NAME );
 
 					if( bookmarkSections && partName != null ) {
-						bookmarks.add( "<bookmark name='" + partName + "' href='" + partIdentifier + "'/>" );
+						bookmarks.add( "<bookmark name='" + partName + "' href='#" + partIdentifier + "'/>" );
 					}
-
-					// partContent += "<style type='text/css'>\n" + getPageStyles( partAttributes, footer == null || footer.trim().length() == 0 ) + "\n</style>\n";
 
 					if ( header != null ) {
 						partContent += "<div class='bx-pdf-header'>" + header + "</div>\n";
@@ -408,14 +453,11 @@ public class PDF {
 			} )
 		    .collect( Collectors.joining( "\n" ) );
 		// @formatter:on
-
-		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
-
-		content	+= "</head>\n<body>\n";
-
 		if ( !bookmarks.isEmpty() ) {
 			content += "<bookmarks>\n" + bookmarks.stream().collect( Collectors.joining( "\n" ) ) + "\n</bookmarks>\n";
 		}
+		content	+= "<style type='text/css'>\n" + getPageStyles( componentAttributes, globalFooter.trim().length() == 0 ) + "\n</style>\n";
+		content	+= "</head>\n<body>\n";
 
 		content	+= bodyContents;
 
@@ -440,15 +482,28 @@ public class PDF {
 	 */
 	private void parseEncryption( IStruct attributes ) {
 		int encryptionType = encryptionTypes.get( attributes.getAsString( ModuleKeys.encryption ).toLowerCase() );
-		if ( encryptionType == 0 && attributes.get( ModuleKeys.openpassword ) == null && attributes.get( ModuleKeys.ownerPassword ) != null ) {
+		if ( encryptionType == 0 && attributes.get( ModuleKeys.openpassword ) == null && attributes.get( ModuleKeys.ownerPassword ) == null ) {
 			return;
 		}
+
+		/**
+		 * Privilege types - https://javadoc.io/doc/com.itextpdf/itextpdf/5.1.0/constant-values.html
+		 * public static final int ALLOW_ASSEMBLY 1024
+		 * public static final int ALLOW_COPY 16
+		 * public static final int ALLOW_DEGRADED_PRINTING 4
+		 * public static final int ALLOW_FILL_IN 256
+		 * public static final int ALLOW_MODIFY_ANNOTATIONS 32
+		 * public static final int ALLOW_MODIFY_CONTENTS 8
+		 * public static final int ALLOW_PRINTING 2052
+		 * public static final int ALLOW_SCREENREADERS 512
+		 */
 		PDFEncryption pdfEncryption = new PDFEncryption(
 		    attributes.get( ModuleKeys.openpassword ) != null ? attributes.getAsString( ModuleKeys.openpassword ).getBytes() : null,
 		    attributes.get( ModuleKeys.ownerPassword ) != null ? attributes.getAsString( ModuleKeys.ownerPassword ).getBytes() : null,
-		    0,
+		    attributes.get( ModuleKeys.ownerPassword ) != null ? 0 : 16,
 		    encryptionType
 		);
+
 		renderer.setPDFEncryption( pdfEncryption );
 	}
 
@@ -535,6 +590,64 @@ public class PDF {
 	}
 
 	/**
+	 * Post-processes the remote document
+	 *
+	 * @param parsedDocument
+	 * @param sourceUrl
+	 */
+	void postProcessRemoteDocument( Document parsedDocument, String sourceUrl ) {
+		URI uri;
+		try {
+			uri = new URI( sourceUrl );
+		} catch ( URISyntaxException e ) {
+			throw new BoxRuntimeException( "Error parsing URI " + sourceUrl, e );
+		}
+		String		baseURL	= uri.getScheme() + "://" + uri.getHost();
+		NodeList	imgTags	= parsedDocument.getElementsByTagName( "img" );
+		for ( int i = 0; i < imgTags.getLength(); i++ ) {
+			Node	img	= imgTags.item( i );
+			String	src	= img.getAttributes().getNamedItem( "src" ).getNodeValue();
+			if ( !src.startsWith( "http" ) ) {
+				if ( src.startsWith( "/" ) ) {
+					src = baseURL + src;
+				} else {
+					src = baseURL + "/" + src;
+				}
+				img.getAttributes().getNamedItem( "src" ).setNodeValue( src );
+			}
+		}
+
+		NodeList anchorTags = parsedDocument.getElementsByTagName( "a" );
+		for ( int i = 0; i < anchorTags.getLength(); i++ ) {
+			Node	anchor	= anchorTags.item( i );
+			String	href	= anchor.getAttributes().getNamedItem( "href" ).getNodeValue();
+			if ( !href.startsWith( "http" ) && !href.startsWith( "#" ) ) {
+				if ( href.startsWith( "/" ) ) {
+					href = baseURL + href;
+				} else {
+					href = baseURL + "/" + href;
+				}
+				anchor.getAttributes().getNamedItem( "href" ).setNodeValue( href );
+			}
+		}
+
+		// Remove all meta tags
+		NodeList metaTags = parsedDocument.getElementsByTagName( "meta" );
+		for ( int i = 0; i < metaTags.getLength(); i++ ) {
+			Node meta = metaTags.item( i );
+			meta.getParentNode().removeChild( meta );
+		}
+
+		// Remove all script tags
+		NodeList scriptTags = parsedDocument.getElementsByTagName( "script" );
+		for ( int i = 0; i < scriptTags.getLength(); i++ ) {
+			Node script = scriptTags.item( i );
+			script.getParentNode().removeChild( script );
+		}
+
+	}
+
+	/**
 	 * Performs post-processing on the finalized PDF document
 	 *
 	 * @param parsDocument
@@ -553,6 +666,9 @@ public class PDF {
 			} else if ( localURL || ( !localURL && src.startsWith( "http" ) ) ) {
 				byte[]	bytes		= ( byte[] ) FileSystemUtil.read( src );
 				String	mimeType	= FileSystemUtil.getMimeType( src );
+				if ( mimeType.equals( "image/jpeg" ) ) {
+					mimeType = "image/jpg";
+				}
 				src = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString( bytes ).trim();
 			}
 			img.getAttributes().getNamedItem( "src" ).setNodeValue( src );
@@ -632,6 +748,7 @@ public class PDF {
 		try ( ByteArrayOutputStream outputStream = new ByteArrayOutputStream() ) {
 			renderer.layout();
 			renderer.createPDF( outputStream, true );
+			renderer.finishPDF();
 			return outputStream.toByteArray();
 		} catch ( IOException e ) {
 			throw new BoxIOException( e );
@@ -645,6 +762,7 @@ public class PDF {
 		    OutputStream outputStream = Files.newOutputStream( Path.of( filename ), overwrite ? StandardOpenOption.CREATE : StandardOpenOption.CREATE_NEW ) ) {
 			renderer.layout();
 			renderer.createPDF( outputStream, true );
+			renderer.finishPDF();
 		} catch ( IOException e ) {
 			logger.error( "Error creating PDF", e );
 		}
